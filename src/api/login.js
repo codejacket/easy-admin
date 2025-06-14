@@ -1,12 +1,12 @@
 import request from '@/utils/request'
 
 // 登录方法
-export function login(username, password, code, uuid) {
+export function login(username, password) {
     return request({
         url: '/login',
         method: 'post',
         headers: { isToken: false },
-        data: { username, password, code, uuid }
+        data: { username, password }
     })
 }
 
@@ -21,15 +21,15 @@ export function logout() {
 // 获取用户信息
 export function getInfo() {
     return request({
-        url: '/getInfo',
+        url: '/system/profile/getInfo',
         method: 'get'
     })
 }
 
 // 获取验证码
-export function getCaptchaData(captchaType) {
+export function getCaptcha(captchaType) {
     return request({
-        url: '/getCaptchaData',
+        url: '/captcha',
         method: 'get',
         headers: { isToken: false },
         timeout: 20000,
@@ -40,7 +40,7 @@ export function getCaptchaData(captchaType) {
 // 校验验证码
 export function checkCaptcha(data) {
     return request({
-        url: '/checkCaptcha',
+        url: '/captcha/check',
         method: 'post',
         data
     })

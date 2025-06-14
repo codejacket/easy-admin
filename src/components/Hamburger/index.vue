@@ -4,7 +4,7 @@
 </template>
 
 <script>
-import { useAppStore } from '@/store/modules/app'
+import { useAppStore } from '@store/app'
 import { mapWritableState } from 'pinia'
 
 export default {

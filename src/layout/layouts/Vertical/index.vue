@@ -1,11 +1,11 @@
 <template>
     <el-container>
         <el-aside v-show="!tabFullscreen">
-            <Sidebar :style="{ width: `${collapse ? 54 : sidebarWidth}px` }">
+            <Sidebar :style="{ width: `${collapse ? 54 : sidebar.width}px` }">
                 <template #header>
                     <SystemLogo class="logo-container" :collapse="collapse" />
                 </template>
-                <Menu :data="treeRoutes">
+                <Menu :data="sidebarRoutes">
                     <template #default="{ meta }">
                         <div>
                             <svg-icon class="menu-icon" :icon="meta.icon" />
@@ -21,20 +21,20 @@
             </Sidebar>
         </el-aside>
         <el-main>
-            <div v-if="fixedHeader">
+            <div v-if="header.fixed">
                 <Navbar v-show="!tabFullscreen">
                     <Hamburger style="margin: 0 15px" />
-                    <Breadcrumb v-if="showBreadcrumb" />
+                    <Breadcrumb v-if="header.showBreadcrumb" />
                 </Navbar>
-                <Tabs v-if="showTabs" />
+                <Tabs v-if="tabs.show" />
             </div>
             <el-scrollbar class="main-scrollbar">
-                <div v-if="!fixedHeader">
+                <div v-if="!header.fixed">
                     <Navbar v-show="!tabFullscreen">
                         <Hamburger style="margin: 0 15px" />
-                        <Breadcrumb v-if="showBreadcrumb" />
+                        <Breadcrumb v-if="header.showBreadcrumb" />
                     </Navbar>
-                    <Tabs v-if="showTabs" />
+                    <Tabs v-if="tabs.show" />
                 </div>
                 <AppMain />
             </el-scrollbar>
@@ -43,9 +43,9 @@
 </template>
 
 <script>
-import { useAppStore } from '@/store/modules/app'
-import { useRouteStore } from '@/store/modules/route'
-import { useSettingsStore } from '@/store/modules/settings'
+import { useAppStore } from '@store/app'
+import { useRouteStore } from '@store/route'
+import { useSettingsStore } from '@store/settings'
 import { mapState } from 'pinia'
 
 import Sidebar from "@/layout/components/Sidebar"
@@ -62,8 +62,8 @@ export default {
     components: { Sidebar, SystemLogo, Menu, Navbar, Tabs, AppMain, Hamburger, Breadcrumb },
     computed: {
         ...mapState(useAppStore, ["collapse", "tabFullscreen"]),
-        ...mapState(useRouteStore, ["treeRoutes"]),
-        ...mapState(useSettingsStore, ["fixedHeader", "showTabs", "showBreadcrumb", "sidebarWidth"]),
+        ...mapState(useRouteStore, ["sidebarRoutes"]),
+        ...mapState(useSettingsStore, ["header", "tabs", "sidebar"]),
     }
 }
 </script>

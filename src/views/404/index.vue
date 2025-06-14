@@ -5,7 +5,7 @@
       <svg-icon icon="404" style="width: 800px;height: 600px" />
     </div>
     <div class="page-404-content">
-      <easy-button type="primary" :t="$t('common.backHome')" @click="back" />
+      <easy-button type="primary" t="common.backHome" @click="back" />
     </div>
   </div>
 </template>
@@ -26,14 +26,11 @@ export default {
 
 <style lang="scss" scoped>
 .page-404 {
+  height: var(--main-height);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
 
   h2 {
     color: var(--el-text-color-regular);

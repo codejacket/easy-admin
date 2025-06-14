@@ -10,7 +10,7 @@ const messages = {}
 locales.keys().forEach(key => messages[key.split('/').pop().replace(/\.|js/g, '')] = locales(key).default)
 
 const i18n = createI18n({
-    locale: localeSettings?.language ?? defaultSettings.language,
+    locale: localeSettings?.system.language ?? defaultSettings.system.language,
     silentTranslationWarn: true,
     missingWarn: false,
     silentFallbackWarn: true,

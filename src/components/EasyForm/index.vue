@@ -1,15 +1,15 @@
 <template>
-    <el-form :model="modelValue" ref="form-ref">
+    <el-form :model="modelValue" ref="form-ref" class="easy-form" :label-width="labelWidth">
         <template v-for="item in formItems">
             <el-form-item v-bind="item">
                 <template #default="slotProps">
-                    <slot-renderer v-if="item['default']" :slots="item['default']" :slot-props="slotProps" />
+                    <easy-renderer v-if="item['default']" :items="item['default']" :item-props="slotProps" />
                 </template>
                 <template #label="slotProps">
-                    <slot-renderer v-if="item['label']" :slots="item['label']" :slot-props="slotProps" />
+                    <easy-renderer v-if="item['label']" :items="item['label']" :item-props="slotProps" />
                 </template>
                 <template #error="slotProps">
-                    <slot-renderer v-if="item['error']" :slots="item['error']" :slot-props="slotProps" />
+                    <easy-renderer v-if="item['error']" :items="item['error']" :item-props="slotProps" />
                 </template>
             </el-form-item>
         </template>
@@ -18,16 +18,20 @@
 </template>
 
 <script>
-import { merge } from 'lodash'
-import SlotRenderer from '@/components/SlotRenderer'
+import { merge, isPlainObject } from 'lodash'
+import EasyRenderer from '@/components/EasyRenderer'
 
 export default {
     name: 'EasyForm',
-    components: { SlotRenderer },
+    components: { EasyRenderer },
     props: {
         modelValue: {
             type: Object,
             default: {}
+        },
+        labelWidth: {
+            type: String,
+            default: 'auto'
         },
         items: {
             type: Array,
@@ -41,7 +45,7 @@ export default {
     computed: {
         formItems() {
             return this.items.map(item => {
-                if (typeof item.default !== 'object') return item
+                if (isPlainObject(item.default)) return item
                 return {
                     ...item,
                     default: [].concat(item.default).map(slot => {
@@ -60,3 +64,12 @@ export default {
     }
 }
 </script>
+
+<style lang="scss" scoped>
+.easy-form {
+    :deep(.el-form-item__label) {
+        font-weight: 600;
+        color: var(--el-text-color-secondary);
+    }
+}
+</style>

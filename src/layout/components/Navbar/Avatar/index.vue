@@ -2,14 +2,14 @@
   <el-dropdown trigger="click" teleported>
     <slot :src="avatar" :username="nickname || name">
       <el-avatar :src="avatar" :size="28" class="user-avatar" alt="avatar">
-        <img src="@/assets/images/default-avatar.png" />
+        <img src="@/assets/img/default-avatar.png" />
       </el-avatar>
     </slot>
     <template #dropdown>
       <el-dropdown-menu>
-        <el-dropdown-item @click="$router.push('/system/user')">
+        <el-dropdown-item @click="$router.push('/system/profile')">
           <span>
-            <svg-icon icon="user" />
+            <svg-icon icon="user-center" />
             {{ $t('common.userCenter') }}
           </span>
         </el-dropdown-item>
@@ -31,9 +31,9 @@
 </template>
 
 <script>
-import { useAppStore } from '@/store/modules/app'
-import { useTabsStore } from '@/store/modules/tabs'
-import { useUserStore } from '@/store/modules/user'
+import { useAppStore } from '@store/app'
+import { useTabsStore } from '@store/tabs'
+import { useUserStore } from '@store/user'
 import { mapState, mapWritableState, mapActions } from 'pinia'
 
 export default {
@@ -45,13 +45,11 @@ export default {
   methods: {
     ...mapActions(useUserStore, ["logout"]),
     async handleLogout() {
-      this.$modal.confirm.warning(this.$t('message.confirmLogout')).then(() => {
-        return this.logout()
-      }).then(() => {
-        return this.$router.push("/login")
-      }).then(() => {
-        useTabsStore().$reset()
-      }).catch(() => { })
+      await this.$modal.confirm.warning(this.$t('message.confirmLogout'))
+      await this.logout()
+      await this.$router.push("/login")
+      // 清除所有标签页
+      useTabsStore().$reset()
     },
   },
 }

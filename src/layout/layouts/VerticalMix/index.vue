@@ -5,8 +5,8 @@
                 <template #header>
                     <SystemLogo class="logo-container" collapse />
                 </template>
-                <el-menu class="sidebar-menu" :default-active="$route.path.split('/')[1]">
-                    <el-menu-item v-for="item in treeRoutes" :key="item.path" :index="item.path"
+                <el-menu class="sidebar-menu" :default-active="`/${$route.path.split('/')[1]}`">
+                    <el-menu-item v-for="item in sidebarRoutes" :key="item.path" :index="item.path"
                         @click="handleClick(item)">
                         <svg-icon :icon="item.meta.icon" />
                         <span v-if="!collapse">{{ item.meta.title }}</span>
@@ -27,7 +27,8 @@
                         <div class="sidebar-submenu-title">
                             <h2 style="color: var(--el-color-primary)">{{ $t('system.title') }}</h2>
                             <svg-icon
-                                :icon="fixSubMenu ? 'pin-fixed' : 'pin'" 
+                                :icon="fixSubMenu ? 'pin-fixed' : 'pin'"
+                                :style="{ color: fixSubMenu ? 'var(--el-color-primary)' : '#808080' }"
                                 :class="{ 'primary-color': fixSubMenu }"
                                 @click="fixSubMenu = !fixSubMenu" />
                         </div>
@@ -42,22 +43,22 @@
             </el-aside>
             <el-container>
                 <el-header>
-                    <div v-if="fixedHeader">
+                    <div v-if="header.fixed">
                         <Navbar v-show="!tabFullscreen">
                             <Hamburger style="margin: 0 15px" />
-                            <Breadcrumb v-if="showBreadcrumb" />
+                            <Breadcrumb v-if="header.showBreadcrumb" />
                         </Navbar>
-                        <Tabs v-if="showTabs" />
+                        <Tabs v-if="tabs.show" />
                     </div>
                 </el-header>
                 <el-main>
                     <el-scrollbar class="main-scrollbar">
-                        <div v-if="!fixedHeader">
+                        <div v-if="!header.fixed">
                             <Navbar v-show="!tabFullscreen">
                                 <Hamburger style="margin: 0 15px" />
-                                <Breadcrumb v-if="showBreadcrumb" />
+                                <Breadcrumb v-if="header.showBreadcrumb" />
                             </Navbar>
-                            <Tabs v-if="showTabs" />
+                            <Tabs v-if="tabs.show" />
                         </div>
                         <AppMain />
                     </el-scrollbar>
@@ -68,9 +69,9 @@
 </template>
 
 <script>
-import { useAppStore } from '@/store/modules/app'
-import { useRouteStore } from '@/store/modules/route'
-import { useSettingsStore } from '@/store/modules/settings'
+import { useAppStore } from '@store/app'
+import { useRouteStore } from '@store/route'
+import { useSettingsStore } from '@store/settings'
 import { mapState } from 'pinia'
 import { isExternal } from '@/utils/validate'
 
@@ -94,18 +95,18 @@ export default {
     },
     computed: {
         ...mapState(useAppStore, ["collapse", "tabFullscreen"]),
-        ...mapState(useRouteStore, ["treeRoutes"]),
-        ...mapState(useSettingsStore, ["fixedHeader", "showTabs", "showBreadcrumb", "sidebarWidth"])
+        ...mapState(useRouteStore, ["sidebarRoutes"]),
+        ...mapState(useSettingsStore, ["header", "tabs"])
     },
     methods: {
         handleClick(route) {
             this.subMenu = route
-            if (!route.hasOwnProperty('children')) {
+            if (!Array.isArray(route.children)) {
                 if (isExternal(route.path)) {
                     window.open(route.path)
                 } else {
                     this.$router.push({
-                        path: `/${route.path}`,
+                        path: route.path,
                         query: route.query
                     })
                 }
@@ -148,6 +149,7 @@ export default {
 
                 span {
                     line-height: normal;
+                    font-size: smaller;
                 }
             }
         }
@@ -195,7 +197,6 @@ export default {
                     }
 
                     svg {
-                        opacity: 0.6;
                         cursor: pointer;
 
                         &:hover {

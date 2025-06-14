@@ -1,5 +1,5 @@
 <template>
-    <el-button-group class="right-toolbar">
+    <el-button-group class="table-toolbar">
         <!-- 搜索 -->
         <el-tooltip :content="$t(showSearch ? 'hiddenSearchBar' : 'showSearchBar')" placement="top" effect="light"
             :hide-after="0" v-if="showSearch !== undefined">
@@ -29,10 +29,10 @@
                         <VueDraggable :modelValue="columns" :animation="150" ghostClass="ghost" handle=".handle-drag"
                             @update:modelValue="$emit('update:columns', $event)">
                             <template v-for="{ label, hidden }, i in columns">
-                                <el-checkbox :label="label" :modelValue="!hidden" v-show="label"
+                                <el-checkbox :label="label" :modelValue="!hidden && hidden !== ''" v-show="label"
                                     @change="handleChange(i, $event)">
                                     <svg-icon icon="drag" class="handle-drag" />
-                                    <span>{{ label }}</span>
+                                    <span class="text-ellipsis">{{ label }}</span>
                                 </el-checkbox>
                             </template>
                         </VueDraggable>
@@ -58,7 +58,8 @@ export default {
     components: { VueDraggable },
     props: {
         showSearch: {
-            type: Boolean
+            type: Boolean,
+            default: undefined
         },
         columns: {
             type: Array
@@ -78,7 +79,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.right-toolbar {
+.table-toolbar {
     margin-left: auto;
 
     .el-button {
@@ -96,8 +97,13 @@ export default {
     overflow: hidden;
 
     :deep(.el-checkbox__label) {
+        overflow: hidden;
         display: flex;
         gap: 6px;
+
+        svg {
+            flex-shrink: 0;
+        }
     }
 
     &:hover {

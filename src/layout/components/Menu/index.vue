@@ -1,5 +1,5 @@
 <template>
-    <el-menu :default-active="$route.path" :collapse="collapse" :unique-opened="uniqueOpened">
+    <el-menu :default-active="$route.path" :collapse="collapse" :unique-opened="sidebar.uniqueOpened">
         <template v-for="route in data" :key="route.path">
             <MenuItem  :item="route" v-show="route.meta && !route.meta.hidden">
                 <template #default="{ meta }">
@@ -11,8 +11,8 @@
 </template>
 
 <script>
-import { useAppStore } from '@/store/modules/app'
-import { useSettingsStore } from '@/store/modules/settings'
+import { useAppStore } from '@store/app'
+import { useSettingsStore } from '@store/settings'
 import { mapState } from 'pinia'
 
 import MenuItem from "./MenuItem"
@@ -28,13 +28,13 @@ export default {
     },
     computed: {
         ...mapState(useAppStore, ["collapse"]),
-        ...mapState(useSettingsStore, ["sidebarWidth", "uniqueOpened"])
+        ...mapState(useSettingsStore, ["sidebar"])
     }
 }
 </script>
 
 <style lang="scss" scoped>
 .el-menu {
-    width: v-bind('sidebarWidth + "px"');
+    width: v-bind('sidebar.width + "px"');
 }
 </style>

@@ -1,78 +1,78 @@
 import { defineStore } from 'pinia'
 import { getRoutes } from '@/api/route'
-import { arrayToTree, treeToArray } from '@/utils/tree'
+import { arrayToTree } from '@/utils/tree'
 import { isExternal } from '@/utils/validate'
+import { upperFirst } from 'lodash'
 
 export const useRouteStore = defineStore('route', {
     state: () => ({
-        treeRoutes: [],
-        listRoutes: [],
+        routes: [],
+        sidebarRoutes: []
     }),
     actions: {
         // 生成路由
         async generateRoutes() {
-            const res = await getRoutes()
-            this.treeRoutes = convertArrayToTree(res.data)
-            this.listRoutes = convertTreeToArray(this.treeRoutes)
-            return createRoutes(this.listRoutes)
+            const { data } = await getRoutes()
+            this.sidebarRoutes = generateSidebarRoutes(data)
+            return this.routes = generateRoutes(data)
         }
     }
 })
 
-function convertArrayToTree(list) {
-    return arrayToTree(list, ({ icon, title, noCache, hidden, disabled, ...node }, parentNodes) => {
-        let nodes = parentNodes.concat(node)
-        let path = isExternal(node.path) ? node.path : nodes.map(node => node.path).join('/')
-        return {
-            ...node,
-            path,
-            meta: { icon, title, noCache, hidden, disabled }
-        }
-    })
-}
-
-function convertTreeToArray(tree) {
-    return treeToArray(tree, (node, parentNodes) => {
-        let nodes = parentNodes.concat(node)
-        return {
-            ...node,
-            meta: {
-                ...node.meta,
-                title: nodes.map(({ meta }) => meta.title),
-                icon: nodes.map(({ meta }) => meta.icon),
-            },
-        }
-    }).filter(route => !route.hasChild)
-}
-
-function createRoutes(list) {
-    return list.filter(route => !isExternal(route.path)).map(route => {
-        let { path, meta, component } = route
-        return {
-            path,
-            name: path,
-            meta: {
-                ...meta,
-                title: meta.title.at(-1),
-                icon: meta.icon.at(-1)
-            },
-            component: async () => {
-                if (isExternal(component)) {
-                    let AppIframe = require('@/layout/components/AppIframe/index.vue').default
-                    AppIframe.name = path
-                    return <AppIframe src={component} />
-                } else {
-                    try {
-                        let view = process.env.NODE_ENV === 'development'
-                            ? require(`@/views/modules/${component}/index.vue`)
-                            : await import(`@/views/modules/${component}/index.vue`)
-                        view.default.name = path
+function generateRoutes(routes) {
+    return arrayToTree(routes.filter(route => !isExternal(route.path)),
+        ({ path, component, children, icon, title, noCache, hidden, disabled, transition }, parentNodes) => {
+        let name = parentNodes.concat({ path }).map(node => upperFirst(node.path)).join('')
+        let meta = { icon, title, noCache, hidden, disabled, transition }
+        if (Array.isArray(children)) {
+            return { 
+                path,
+                meta,
+                children,
+                redirect: '/404'
+            }
+        } else {
+            return {
+                path,
+                name,
+                meta,
+                component: async () => {
+                    if (isExternal(component)) {
+                        let view = require('@/layout/components/AppIframe/index.vue')
+                        view.default.name = name
+                        return <view.default src={component} />
+                    } else {
+                        let view = await loadView(component)
+                        view.default.name = name
                         return <view.default />
-                    } catch {
-                        return require(`@/views/404/index.vue`)
                     }
                 }
             }
         }
     })
+}
+
+function generateSidebarRoutes(routes) {
+    return arrayToTree(routes, ({ icon, title, noCache, hidden, disabled, transition, query, ...node }, parentNodes) => {
+        let nodes = parentNodes.concat(node)
+        let path = isExternal(node.path) ? node.path : `/${nodes.map(node => node.path).join('/')}`
+        return {
+            ...node,
+            path,
+            query: JSON.parse(query),
+            meta: { icon, title, noCache, hidden, disabled, transition }
+        }
+    }).filter(route => !route.parentId)
+}
+
+async function loadView(component) {
+    try {
+        if (process.env.NODE_ENV === 'development') {
+            return require(`@/views/modules/${component}/index.vue`)
+        } else {
+            return await import(`@/views/modules/${component}/index.vue`)
+        }
+    } catch {
+        return require(`@/views/404/index.vue`)
+    }
 }

@@ -1,0 +1,55 @@
+.relative {
+  position: relative;
+}
+
+.abs-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-around {
+  justify-content: space-around;
+}
+
+.align-center {
+  align-items: center;
+}
+
+@each $value in 0, 10, 12, 14, 16, 18, 20 {
+  .m#{$value} {
+    margin: #{$value}px;
+  }
+}
+
+@each $value in 0, 10, 12, 14, 16, 18, 20 {
+  .p#{$value} {
+    padding: #{$value}px;
+  }
+}
+
+@each $value in 0, 10, 12, 14, 16, 18, 20 {
+  .g#{$value} {
+    gap: #{$value}px;
+  }
+}
+
+@each $value in 100, 200, 300, 400, 500, 600, 700, 800, 900  {
+  .bold#{$value} {
+    font-weight: #{$value};
+  }
+}

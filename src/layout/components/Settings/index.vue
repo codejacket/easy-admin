@@ -2,97 +2,111 @@
   <el-drawer class="drawer-container" size="320" :title="$t('common.configuration')" append-to-body>
     <el-scrollbar style="height:calc(100% - 52.8px)">
       <el-collapse>
-        <el-collapse-item :title="$t('settings.title.system')">
-          <LayoutSelect v-model="layout" :options="Object.keys(subTitle.layout.options)" />
+        <!-- 系统 -->
+        <el-collapse-item :title="$t('settings.system.title')">
+          <layout-select v-model="system.layout" :options="Object.keys(settings.system.children.layout.options)" />
           <br>
-          <setting-item type="el-segmented" title="mode" v-model="mode" :options="Object.keys(subTitle.mode.options)">
+          <setting-item type="el-segmented" title="system.children.mode" v-model="system.mode" 
+            :options="Object.keys(settings.system.children.mode.options)">
             <template #default="{ item }">
-              <svg-icon :icon="`${item}`" />
+              <svg-icon :icon="`${{ light: 'light', dark: 'dark', auto: 'mode-auto' }[item]}`" />
             </template>
           </setting-item>
-          <setting-item type="el-select" title="language" v-model="language"
-            :placeholder="subTitle.language.placeholder">
+          <setting-item type="el-select" title="system.children.language" v-model="system.language"
+            :placeholder="settings.system.children.language.placeholder">
             <template #prefix>
               <svg-icon icon="global" />
             </template>
-            <el-option v-for="val, key in subTitle.language.options" :key="key" :label="val" :value="key" />
+            <el-option v-for="val, key in settings.system.children.language.options" :key="key" :label="val" :value="key" />
           </setting-item>
-          <setting-item type="el-select" title="pageAnimateType" v-model="pageAnimateType"
-            :placeholder="subTitle.pageAnimateType.placeholder">
+          <setting-item type="el-select" title="system.children.pageAnimateType" v-model="system.pageAnimateType"
+            :placeholder="settings.system.children.pageAnimateType.placeholder">
             <template #prefix>
               <svg-icon icon="ppt" />
             </template>
-            <el-option v-for="val, key in subTitle.pageAnimateType.options" :key="key" :label="val" :value="key" />
+            <el-option v-for="val, key in settings.system.children.pageAnimateType.options" :key="key" :label="val" :value="key" />
           </setting-item>
-          <setting-item type="el-switch" title="dynamicTitle" v-model="dynamicTitle" />
-          <setting-item type="el-switch" title="watermark" v-model="watermark" />
-          <setting-item type="el-switch" title="grey" v-model="grey" />
+          <setting-item type="el-switch" title="system.children.dynamicTitle" v-model="system.dynamicTitle" />
+          <setting-item type="el-switch" title="system.children.watermark" v-model="system.watermark" />
+          <setting-item type="el-switch" title="system.children.grey" v-model="system.grey" />
+          <setting-item type="el-switch" title="system.children.colorWeak" v-model="system.colorWeak" />
         </el-collapse-item>
-        <el-collapse-item :title="$t('settings.title.theme')">
-          <setting-item type="easy-color-picker" title="theme_primary" v-model="theme.primary" />
-          <setting-item type="easy-color-picker" title="theme_success" v-model="theme.success" />
-          <setting-item type="easy-color-picker" title="theme_info" v-model="theme.info" />
-          <setting-item type="easy-color-picker" title="theme_warning" v-model="theme.warning" />
-          <setting-item type="easy-color-picker" title="theme_danger" v-model="theme.danger" />
+        <!-- 主题 -->
+        <el-collapse-item :title="$t('settings.theme.title')">
+          <setting-item type="easy-color-picker" title="theme.children.primary" v-model="theme.primary" />
+          <setting-item type="easy-color-picker" title="theme.children.success" v-model="theme.success" />
+          <setting-item type="easy-color-picker" title="theme.children.info" v-model="theme.info" />
+          <setting-item type="easy-color-picker" title="theme.children.warning" v-model="theme.warning" />
+          <setting-item type="easy-color-picker" title="theme.children.danger" v-model="theme.danger" />
         </el-collapse-item>
-        <el-collapse-item :title="$t('settings.title.navbar')">
-          <setting-item type="el-input-number" title="headerHeight" v-model="headerHeight" :min="40" :max="80"
-            :step="5" />
-          <setting-item type="el-switch" title="fixedHeader" v-model="fixedHeader" tip />
-          <setting-item type="el-switch" title="showBreadcrumb" v-model="showBreadcrumb" />
-          <setting-item type="el-switch" title="showBreadcrumbIcon" v-model="showBreadcrumbIcon" />
+        <!-- 头部 -->
+        <el-collapse-item :title="$t('settings.header.title')">
+          <setting-item type="el-input-number" title="header.children.height" v-model="header.height" :min="40" :max="80" :step="5" />
+          <setting-item type="el-switch" title="header.children.fixed" v-model="header.fixed" tip />
+          <setting-item type="el-switch" title="header.children.showBreadcrumb" v-model="header.showBreadcrumb" />
+          <setting-item type="el-switch" title="header.children.showBreadcrumbIcon" v-model="header.showBreadcrumbIcon" />
         </el-collapse-item>
-        <el-collapse-item :title="$t('settings.title.navToolbar')">
+        <!-- 工具栏 -->
+        <el-collapse-item :title="$t('settings.navToolbar.title')">
           <VueDraggable v-model="navToolbar" :animation="150" handle=".handle" ghostClass="ghost">
             <div :class="['nav-toolbar-item', { 'disabled': !item.show }]" v-for="item in navToolbar" :key="item.is">
               <div>
                 <svg-icon class="handle" :icon="item.icon" />
-                <span>{{ subTitle.navToolbar.options[item.is] }}</span>
+                <span>{{ settings.navToolbar.options[item.is] }}</span>
               </div>
               <el-switch v-model="item.show" size="small" />
             </div>
           </VueDraggable>
         </el-collapse-item>
-        <el-collapse-item :title="$t('settings.title.tabs')">
-          <setting-item type="el-switch" title="showTabs" v-model="showTabs" />
-          <setting-item type="el-switch" title="showTabsIcon" v-model="showTabsIcon" />
-          <setting-item type="el-input-number" title="tabsHeight" v-model="tabsHeight" :min="30" :max="60" :step="2" />
-          <setting-item type="el-select" title="tabsStyle" v-model="tabsStyle"
-            :placeholder="subTitle.tabsStyle.placeholder">
+        <!-- 标签栏 -->
+        <el-collapse-item :title="$t('settings.tabs.title')">
+          <setting-item type="el-switch" title="tabs.children.show" v-model="tabs.show" />
+          <setting-item type="el-switch" title="tabs.children.showIcon" v-model="tabs.showIcon" />
+          <setting-item type="el-input-number" title="tabs.children.height" v-model="tabs.height" :min="30" :max="60" :step="2" />
+          <setting-item type="el-select" title="tabs.children.style" v-model="tabs.style"
+            :placeholder="settings.tabs.children.style.placeholder">
             <template #prefix>
               <svg-icon icon="tag" />
             </template>
-            <el-option v-for="val, key in subTitle.tabsStyle.options" :key="key" :label="val" :value="key" />
+            <el-option v-for="val, key in settings.tabs.children.style.options" :key="key" :label="val" :value="key" />
           </setting-item>
-          <setting-item type="el-switch" title="draggable" v-model="draggable" />
+          <setting-item type="el-switch" title="tabs.children.draggable" v-model="tabs.draggable" />
         </el-collapse-item>
-        <el-collapse-item :title="$t('settings.title.sidebar')">
-          <setting-item type="el-input-number" title="sidebarWidth" v-model="sidebarWidth" :min="180" :max="360"
-            :step="5" />
-          <setting-item type="el-input-number" title="sidebarItemHeight" v-model="sidebarItemHeight" :min="40" :max="60"
-            :step="2" />
-          <setting-item type="el-select" title="sidebarStyle" v-model="sidebarStyle"
-            :placeholder="subTitle.sidebarStyle.placeholder">
+        <!-- 侧边栏 -->
+        <el-collapse-item :title="$t('settings.sidebar.title')">
+          <setting-item type="el-input-number" title="sidebar.children.width" v-model="sidebar.width" :min="180" :max="360" :step="5" />
+          <setting-item type="el-input-number" title="sidebar.children.itemHeight" v-model="sidebar.itemHeight" :min="40" :max="60" :step="2" />
+          <setting-item type="el-select" title="sidebar.children.style" v-model="sidebar.style" :placeholder="settings.sidebar.children.style.placeholder">
             <template #prefix>
               <svg-icon icon="tag" />
             </template>
-            <el-option v-for="val, key in subTitle.sidebarStyle.options" :key="key" :label="val" :value="key" />
+            <el-option v-for="val, key in settings.sidebar.children.style.options" :key="key" :label="val" :value="key" />
           </setting-item>
-          <setting-item type="el-switch" title="darkSidebar" v-model="darkSidebar" tip />
-          <setting-item type="el-switch" title="uniqueOpened" v-model="uniqueOpened" tip />
+          <setting-item type="el-switch" title="sidebar.children.dark" v-model="sidebar.dark" tip />
+          <setting-item type="el-switch" title="sidebar.children.uniqueOpened" v-model="sidebar.uniqueOpened" tip />
+        </el-collapse-item>
+        <!-- 版权 -->
+        <el-collapse-item :title="$t('settings.copyright.title')">
+          <setting-item type="el-switch" title="copyright.children.show" v-model="copyright.show" />
+          <setting-item type="el-input" title="copyright.children.company" v-model="copyright.company" 
+            :placeholder="settings.copyright.children.company.placeholder" />
+          <setting-item type="el-input" title="copyright.children.date" v-model="copyright.date" 
+            :placeholder="settings.copyright.children.company.date" />
+          <setting-item type="el-input" title="copyright.children.icp" v-model="copyright.icp" 
+            :placeholder="settings.copyright.children.company.icp" />
         </el-collapse-item>
       </el-collapse>
     </el-scrollbar>
     <div class="footer">
-      <easy-button type="primary" i="save" :t="$t('operation.save')" plain v-on-click-rotate @click="save" />
-      <easy-button i="refresh" :t="$t('operation.reset')" plain v-on-click-rotate @click="reset" />
+      <easy-button type="primary" i="save" t="operation.save" plain v-on-click-rotate @click="save" />
+      <easy-button i="refresh" t="operation.reset" plain v-on-click-rotate @click="reset" />
     </div>
   </el-drawer>
 </template>
 
 <script>
 import settings from "@/settings.js"
-import { useSettingsStore } from '@/store/modules/settings'
+import { useSettingsStore } from '@store/settings'
 import { mapWritableState } from 'pinia'
 
 import SettingItem from './SettingItem'
@@ -104,11 +118,8 @@ export default {
   components: { SettingItem, LayoutSelect, VueDraggable },
   computed: {
     ...mapWritableState(useSettingsStore, Object.keys(settings)),
-    options() {
-      return this.$tm('settings.options')
-    },
-    subTitle() {
-      return this.$tm('settings.subTitle')
+    settings() {
+      return this.$tm('settings')
     }
   },
   methods: {
@@ -137,6 +148,7 @@ export default {
 
     .el-collapse {
       .el-collapse-item__header {
+        padding-right: 0;
         font-size: 14px;
         letter-spacing: 1px;
       }

@@ -9,15 +9,9 @@
     }
 }
 
-.el-dialog {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    margin: 0;
-}
-
 .el-table {
+    --el-table-fixed-right-column: inset -10px 0 10px -10px rgba(0, 0, 0, calc(0.8 - var(--light) * 0.65));
+
     .el-checkbox__inner {
         background: transparent;
     }
@@ -45,4 +39,10 @@
 
 .el-avatar {
     --el-avatar-bg-color: transparent;
+}
+
+.el-tabs {
+    .el-tabs__item {
+        box-shadow: none !important;
+    }
 }

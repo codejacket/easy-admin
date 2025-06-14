@@ -1,6 +1,6 @@
 <template>
     <div class="layout-select">
-        <el-tooltip v-for="item in options" :key="item" :content="$t(`settings.subTitle.layout.options.${item}`)"
+        <el-tooltip v-for="item in options" :key="item" :content="$t(`settings.system.children.layout.options.${item}`)"
             placement="top" :show-after="300">
             <div :class="['layout-select-item', { 'is-active': modelValue === item }]"
                 @click="$emit('update:modelValue', item)">

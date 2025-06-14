@@ -18,7 +18,7 @@
                 <el-scrollbar>
                     <div class="icon-container">
                         <div class="icon-item-wrapper" v-for="(icon, index) in iconList" :key="index">
-                            <div :class="['icon-item', { 'active': modelValue === icon }]" :title="icon" 
+                            <div :class="['icon-item', { 'active': modelValue === icon }]" :title="icon"
                                 @click="selectedIcon(icon)">
                                 <svg-icon :icon="icon" />
                             </div>
@@ -127,6 +127,12 @@ export default {
 
                         &:hover {
                             border-color: var(--el-color-primary);
+                            box-shadow: 0 0 3px var(--el-color-primary-light-7);
+
+                            svg {
+                                color: var(--el-color-primary);
+                                filter: drop-shadow(0 0 3px var(--el-color-primary-light-7));
+                            }
                         }
 
                         &.active {

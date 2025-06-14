@@ -1,6 +1,7 @@
 <template>
     <el-pagination background layout="sizes, ->, total, prev, pager, next, jumper" :pager-count="7"
         :page-sizes="pageSizes">
+        <slot />
     </el-pagination>
 </template>
 

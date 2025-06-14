@@ -1,30 +1,30 @@
 <template>
     <el-container>
-        <el-header v-if="fixedHeader">
+        <el-header v-if="header.fixed">
             <Navbar v-show="!tabFullscreen">
                 <SystemLogo class="logo-container" />
-                <Menu :data="treeRoutes" mode="horizontal">
+                <Menu :data="sidebarRoutes" mode="horizontal">
                     <template #default="{ meta }">
                         <svg-icon class="menu-icon" :icon="meta.icon" />
-                        <span>{{ meta.title }}</span>
+                        <span class="text-ellipsis">{{ meta.title }}</span>
                     </template>
                 </Menu>
             </Navbar>
-            <Tabs v-if="showTabs" />
+            <Tabs v-if="tabs.show" />
         </el-header>
         <el-main>
             <el-scrollbar class="main-scrollbar">
-                <el-header v-if="!fixedHeader">
+                <el-header v-if="!header.fixed">
                     <Navbar v-show="!tabFullscreen">
                         <SystemLogo class="logo-container" />
-                        <Menu :data="treeRoutes" mode="horizontal">
+                        <Menu :data="sidebarRoutes" mode="horizontal">
                             <template #default="{ meta }">
                                 <svg-icon class="menu-icon" :icon="meta.icon" />
-                                <span>{{ meta.title }}</span>
+                                <span class="text-ellipsis">{{ meta.title }}</span>
                             </template>
                         </Menu>
                     </Navbar>
-                    <Tabs v-if="showTabs" />
+                    <Tabs v-if="tabs.show" />
                 </el-header>
                 <AppMain />
             </el-scrollbar>
@@ -33,9 +33,9 @@
 </template>
 
 <script>
-import { useAppStore } from '@/store/modules/app'
-import { useRouteStore } from '@/store/modules/route'
-import { useSettingsStore } from '@/store/modules/settings'
+import { useAppStore } from '@store/app'
+import { useRouteStore } from '@store/route'
+import { useSettingsStore } from '@store/settings'
 import { mapState } from 'pinia'
 
 import SystemLogo from "@/components/SystemLogo"
@@ -49,8 +49,8 @@ export default {
     components: { SystemLogo, Menu, Navbar, Tabs, AppMain },
     computed: {
         ...mapState(useAppStore, ["title", "tabFullscreen"]),
-        ...mapState(useRouteStore, ["treeRoutes"]),
-        ...mapState(useSettingsStore, ["fixedHeader", "showTabs"]),
+        ...mapState(useRouteStore, ["sidebarRoutes"]),
+        ...mapState(useSettingsStore, ["header", "tabs"]),
     }
 }
 </script>

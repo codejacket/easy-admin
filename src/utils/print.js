@@ -17,7 +17,9 @@ export function printTable(data, columns, options) {
     let content =  `
         <style>${style}</style>
         <table cellpadding="0" cellspacing="0">
-            <thead><tr>${columns.map(({ label }) => `<th>${label || ''}</th>`)?.join('')}</tr></thead>
+            <thead>
+                <tr>${columns.map(({ label }) => `<th>${label || ''}</th>`)?.join('')}</tr>
+            </thead>
             <tbody>${rows.map(row => `<tr>${row.map(col => `<td>${col}</td>`).join('')}</tr>`).join('')}</tbody>
         </table>`
     print(content)

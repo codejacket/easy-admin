@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { getCaptchaData, checkCaptcha } from "@/api/login"
+import { getCaptcha, checkCaptcha } from "@/api/login"
 
 export default {
     name: 'Slide',
@@ -82,7 +82,7 @@ export default {
                 img: '',
                 pieces: '',
                 y: 0,
-                uuid: ''
+                code: ''
             }
         }
     },
@@ -123,19 +123,19 @@ export default {
                 img: '',
                 pieces: '',
                 y: 0,
-                uuid: '',
+                code: '',
             }
         },
-        getCaptchaData() {
+        getCaptcha() {
             this.loading = true
-            getCaptchaData({
+            getCaptcha({
                 captchaType: 'slide'
             }).then((res) => {
                 if (res.data) {
                     this.captchaData.img = res.data.img
                     this.captchaData.pieces = res.data.pieces
                     this.captchaData.y = res.data.y
-                    this.captchaData.uuid = res.data.uuid
+                    this.captchaData.code = res.data.code
                     this.loading = false
                     this.result = undefined
                     this.originX = 0
@@ -176,14 +176,14 @@ export default {
         },
         refresh() {
             if (!this.checking && !this.result) {
-                this.getCaptchaData()
+                this.getCaptcha()
             }
         },
         validate() {
             if (this.result === undefined) {
                 this.checking = true
                 checkCaptcha({
-                    uuid: this.captchaData.uuid,
+                    code: this.captchaData.code,
                     x: this.x,
                     timestamp: this.timestamp
                 }).then(() => {
@@ -218,7 +218,7 @@ export default {
         visible(newVal) {
             this.reset()
             if (newVal) {
-                this.getCaptchaData()
+                this.getCaptcha()
             }
         }
     }

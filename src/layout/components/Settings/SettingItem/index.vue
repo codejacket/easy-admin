@@ -1,8 +1,8 @@
 <template>
     <div class="settings-item">
         <span :class="['settings-title', { disabled }]">
-            {{ $t(`settings.subTitle.${title}.title`) }}
-            <el-tooltip v-if="tip" :content="$t(`settings.subTitle.${title}.tip`)" placement="top" :show-after="500">
+            {{ $t(`settings.${title}.title`) }}
+            <el-tooltip v-if="tip" :content="$t(`settings.${title}.tip`)" placement="top" :show-after="500">
                 <svg-icon icon="circle-question-mark" aria-hidden />
             </el-tooltip>
         </span>
@@ -60,6 +60,7 @@ export default {
     }
 
     .el-segmented {
+        width: 100px;
         padding: 4px;
 
         .is-selected svg {
@@ -67,7 +68,6 @@ export default {
         }
 
         svg {
-            width: 32px;
             color: var(--el-segmented-color)
         }
     }
@@ -75,6 +75,10 @@ export default {
     .el-select,
     .el-input-number {
         width: 100px;
+    }
+
+    .el-input {
+        width: 140px;
     }
 
     .disabled {

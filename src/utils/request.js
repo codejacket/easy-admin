@@ -3,12 +3,10 @@ import i18n from '@/locales'
 import modal from '@/plugins/modules/modal'
 import { session } from '@/plugins/modules/cache'
 import { $t, $tm } from '@/locales'
-import { saveAs } from 'file-saver'
 import { getToken } from '@/utils/auth'
-import { useUserStore } from '@/store/modules/user'
+import { useUserStore } from '@store/user'
 import { tansParams } from '@/utils'
-import { isBlob } from '@/utils/validate'
-import { ElNotification, ElLoading } from 'element-plus'
+import { ElNotification } from 'element-plus'
 
 export let isRelogin = { show: false }
 
@@ -112,11 +110,8 @@ service.interceptors.response.use(res => {
     }
 }, error => {
     console.error('err:' + error)
-    console.log('error.response.data.status:' + error.response.data.status)
+    console.log('error.response.data.status:' + error.response?.data?.status)
     let { message } = error
-    if (error.response.data.status === 1000) {
-        router.push({ path: '/applylicense' })
-    }
     if (message == "Network Error") {
         message = $t('message.networkError')
     } else if (message.includes("timeout")) {
@@ -127,32 +122,5 @@ service.interceptors.response.use(res => {
     modal.message.error({ message, duration: 5 * 1000 })
     Promise.reject(error)
 })
-
-// 通用下载方法
-let downloadLoadingInstance
-export async function download(url, params, filename, config) {
-    downloadLoadingInstance = ElLoading.service({ text: $t('message.downloading'), background: 'rgba(0, 0, 0, 0.7)' })
-    try {
-        const data = await service.post(url, params, {
-            transformRequest: [(params) => tansParams(params)],
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            responseType: 'blob',
-            ...config
-        })
-        if (isBlob(data)) {
-            saveAs(new Blob([data]), filename)
-        } else {
-            let resText = await data.text()
-            let rspObj = JSON.parse(resText)
-            let errMsg = errorCode[rspObj.code] || rspObj.msg || errorCode['default']
-            modal.message.error(errMsg)
-        }
-        downloadLoadingInstance.close()
-    } catch (r) {
-        console.error(r)
-        modal.message.error($t('message.downloadFailed'))
-        downloadLoadingInstance.close()
-    }
-}
 
 export default service

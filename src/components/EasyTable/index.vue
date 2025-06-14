@@ -1,16 +1,17 @@
 <template>
-    <el-table class="easy-table" :tooltip-options="{ showAfter: 600 }" border @selection-change="handleSelect">
+    <el-table ref="el-table-ref" class="easy-table" :data="data" :tooltip-options="{ showAfter: 600 }" border
+        :expand-row-keys="$attrs['row-key'] ? expandRowKeys : undefined" @expand-change="handleExpandChange"
+        @selection-change="handleSelect">
         <template v-for="(column, index) in columns" :key="index">
-            <el-table-column v-bind="{ ...defaultTableColumn, ...column }" v-if="!column.hidden">
+            <el-table-column v-bind="{ ...defaultTableColumn, ...column }" v-if="!column.hidden && column.hidden !== ''">
                 <template #default="slotProps">
-                    <slot-renderer v-if="column['default']" :slots="column['default']" :slot-props="slotProps" />
+                    <easy-renderer v-if="column['default']" :items="column['default']" :item-props="slotProps" />
                 </template>
                 <template #header="slotProps">
-                    <slot-renderer v-if="column['header']" :slots="column['header']" :slot-props="slotProps" />
+                    <easy-renderer v-if="column['header']" :items="column['header']" :item-props="slotProps" />
                 </template>
                 <template #filter-icon="slotProps">
-                    <slot-renderer v-if="column['filter-icon']" :slots="column['filter-icon']"
-                        :slot-props="slotProps" />
+                    <easy-renderer v-if="column['filter-icon']" :items="column['filter-icon']" :item-props="slotProps" />
                 </template>
             </el-table-column>
         </template>
@@ -24,24 +25,42 @@
 </template>
 
 <script>
-import { removeIf } from '@/utils'
 import { printTable } from "@/utils/print"
-import { omit } from 'lodash'
+import { add } from '@/utils'
+import { reduceTree } from '@/utils/tree'
+import { remove, pick, omit, merge } from 'lodash'
+import { useDraggable } from "vue-draggable-plus"
 
-import SlotRenderer from '@/components/SlotRenderer'
+import EasyRenderer from '@/components/EasyRenderer'
 
 export default {
     name: 'EasyTable',
-    components: { SlotRenderer },
+    components: { EasyRenderer },
     props: {
         columns: {
             type: Array,
             default: []
         },
+        data: {
+            type: Array,
+            default: []
+        },
+        expandRowKeys: {
+            type: Array,
+            default: []
+        },
+        dragOptions: {
+            type: Object,
+            default: {
+                disabled: true,
+            }
+        }
     },
     data() {
         return {
+            columnsJson: JSON.stringify(this.columns),
             selections: [],
+            draggableInstance: null,
             defaultTableColumn: {
                 'align': 'center',
                 'show-overflow-tooltip': ''
@@ -49,35 +68,64 @@ export default {
         }
     },
     created() {
-        let slots = this.$slots.default?.() || []
-        if (slots[0]?.type?.description === 'v-fgt') {
-            slots = slots[0].children
-        }
-        // 移除已经存在的列
-        removeIf(this.columns, ({ __v_isVNode }) => __v_isVNode)
-        // 获取插槽里的列
-        let slotsMap = slots.map(({ props, children, __v_isVNode }) => {
-            return { ...props, ...omit(children, ['_']), __v_isVNode }
-        })
+        // 获取插槽里的列，并过滤掉注释的节点
+        let slots = (this.$slots.default?.() || []).filter(slot => slot.type?.description !== 'v-cmt')
+        // v-fgt 节点的子节点需要提取出来
+        slots = reduceTree(slots, (acc, cur) => {
+            if (cur.type?.description !== 'v-fgt') {
+                acc.push(cur)
+                return false
+            }
+        }, [])
+        // 提取 props 和 children
+        slots = slots.map(({ props, children }) => ({ ...props, ...omit(children, ['_']) }))
         // 添加插槽里的列
-        this.columns.unshift(...slotsMap)
+        this.columns.unshift(...slots)
     },
-    computed: {
-        single() {
-            return this.selections.length === 1
+    mounted() {
+        merge(this, pick(this.$refs['el-table-ref'], ['clearSelection', 'scrollTo', 'setScrollTop']))
+        let el = this.$el.querySelector(".el-table__body-wrapper table > tbody")
+        if (el) {
+            this.draggableInstance = useDraggable(el, this.data, this.dragOptions)
+            this.draggableInstance.start()
         }
+    },
+    unmounted() {
+        this.columns.splice(0, this.columns.length, ...JSON.parse(this.columnsJson))
     },
     methods: {
+        handleExpandChange(row, expandedRows) {
+            let rowKey = this.$attrs['row-key']
+            if (rowKey) {
+                if (expandedRows) {
+                    add(this.expandRowKeys, `${row[rowKey]}`)
+                } else {
+                    remove(this.expandRowKeys, id => id === `${row[rowKey]}`)
+                }
+            }
+        },
         handleSelect(selections) {
             this.selections = selections
         },
         print(options) {
             let { isHead = true, isSelected = true } = options || {}
-            let data = isSelected && this.selections.length ? this.selections : this.$attrs.data
+            let data = isSelected && this.selections.length ? this.selections : this.data
             let columns = this.columns.filter(column => !column.hidden && column.noPrint !== true)
             printTable(data, columns, { isHead })
         }
-    }
+    },
+    watch: {
+        dragOptions: {
+            deep: true,
+            handler(options) {
+                if (this.draggableInstance) {
+                    Object.entries(options).forEach(([key, value]) => {
+                        this.draggableInstance.option(key, value)
+                    })
+                }
+            }
+        }
+    },
 }
 </script>
 

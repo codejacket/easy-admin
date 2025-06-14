@@ -1,3 +1,4 @@
+@import url('./common.scss');
 @import url('./element-ui.scss');
 @import url('./nprogress.scss');
 @import url('./transition.scss');
@@ -14,20 +15,12 @@
     width: 1em;
     height: 1em;
     margin-right: 6px;
-
-    +span {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
 }
 
-.main-scrollbar {
-    width: 100%;
-
-    .el-scrollbar__wrap .el-scrollbar__view {
-        min-height: calc(100% - 20px);
-    }
+.text-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 ::view-transition-new(root),
@@ -39,8 +32,12 @@
     z-index: 9999;
 }
 
-.html-grey {
+.grey {
     filter: grayscale(100%);
+}
+
+.color-weak {
+    filter: invert(80%);
 }
 
 .handle-drag {
@@ -61,82 +58,10 @@
 
 .app-card {
     background: var(--el-bg-color);
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.12);
 }
 
 .app-container {
     height: clac(var(--main-height) - 40px);
     margin: 20px;
-}
-
-.abs-center {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.flex {
-    display: flex;
-}
-
-.flex-column {
-    display: flex;
-    flex-direction: column;
-}
-
-.m20 {
-    margin: 20px;
-}
-
-.m16 {
-    margin: 16px;
-}
-
-.m14 {
-    margin: 14px;
-}
-
-.m12 {
-    margin: 12px;
-}
-
-.m0 {
-    margin: 0;
-}
-
-.p20 {
-    padding: 20px;
-}
-
-.p16 {
-    padding: 16px;
-}
-
-.p14 {
-    padding: 14px;
-}
-
-.p12 {
-    padding: 12px;
-}
-
-.p0 {
-    padding: 0;
-}
-
-.g20 {
-    gap: 20px;
-}
-
-.g16 {
-    gap: 16px;
-}
-
-.g14 {
-    gap: 14px;
-}
-
-.g12 {
-    gap: 12px;
 }

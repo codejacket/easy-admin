@@ -1,11 +1,12 @@
-import en from 'element-plus/es/locale/lang/en'
+import en from 'element-plus/dist/locale/en.mjs'
 
 export default {
     ...en,
     dict: {},
     'system': {
         'title': 'Easy-Admin',
-        'copyright': 'Copyright © 2024 Easy-Admin All Rights Reserved.',
+        'icp': 'ICP: {icp}',
+        'copyright': 'Copyright © {date} {company} All Rights Reserved',
         'watermark': 'Easy-Admin',
     },
     'common': {
@@ -22,9 +23,12 @@ export default {
         'select': 'Select',
         'add': 'Add',
         'delete': 'Delete',
+        'import': 'Import',
         'export': 'Export',
         'update': 'Update',
+        'edit': 'Edit',
         'drag': 'Drag',
+        'copy': 'Copy',
         'operation': 'Operation',
         'refresh': 'Refresh',
         'expand': 'Expand',
@@ -83,138 +87,177 @@ export default {
         'default': 'System Unknown Error'
     },
     'settings': {
-        'title': {
-            'system': 'System',
-            'theme': 'Theme',
-            'navbar': 'Navbar',
-            'navToolbar': 'Toolbar',
-            'tabs': 'Tabs',
-            'sidebar': 'Sidebar',
+        'system': {
+            'title': 'System',
+            'children': {
+                'mode': {
+                    'title': 'Mode',
+                    'options': {
+                        'light': 'Light',
+                        'dark': 'Dark',
+                        'auto': 'Auto'
+                    }
+                },
+                'layout': {
+                    'options': {
+                        'vertical': 'Vertical',
+                        'vertical-mix': 'Vertical Mix',
+                        'horizontal': 'Horizontal',
+                        'horizontal-mix': 'Horizontal Mix',
+                    }
+                },
+                'language': {
+                    'title': 'Language',
+                    'placeholder': 'Select Language',
+                    'options': {
+                        'en': 'English',
+                        'zh': '简体中文',
+                    }
+                },
+                'pageAnimateType': {
+                    'title': 'Page Animate Type',
+                    'options': {
+                        'fade': 'Fade',
+                        'fade-zoom': 'Fade Zoom',
+                        'slide-right': 'Slide Right',
+                        'slide-bottom': 'Slide Bottom',
+                        'flip': 'Flip',
+                        'none': 'None',
+                    }
+                },
+                'dynamicTitle': {
+                    'title': 'Dynamic Title'
+                },
+                'watermark': {
+                    'title': 'Watermark'
+                },
+                'grey': {
+                    'title': 'Grey'
+                },
+                'colorWeak': {
+                    'title': 'Color Weak'
+                },
+            }
         },
-        'subTitle': {
-            'mode': {
-                'title': 'Mode',
-                'options': {
-                    'light': 'Light',
-                    'dark': 'Dark',
+        'theme': {
+            'title': 'Theme',
+            'children': {
+                'primary': {
+                    'title': 'Primary Color'
+                },
+                'success': {
+                    'title': 'Success Color'
+                },
+                'info': {
+                    'title': 'Info Color'
+                },
+                'warning': {
+                    'title': 'Warning Color'
+                },
+                'danger': {
+                    'title': 'Danger Color'
                 }
-            },
-            'layout': {
-                'options': {
-                    'vertical': 'Vertical',
-                    'vertical-mix': 'Vertical Mix',
-                    'horizontal': 'Horizontal',
-                    'horizontal-mix': 'Horizontal Mix',
+            }
+        },
+        'header': {
+            'title': 'Header',
+            'children': {
+                'height': {
+                    'title': 'Header Height'
+                },
+                'fixed': {
+                    'title': 'Fixed Header',
+                    'tip': 'When turned on, the navbar and tabs bar will be fixed to the top'
+                },
+                'showBreadcrumb': {
+                    'title': 'Show Breadcrumb'
+                },
+                'showBreadcrumbIcon': {
+                    'title': 'Show BreadcrumbIcon'
+                },
+            }
+        },
+        'navToolbar': {
+            'title': 'Toolbar',
+            'options': {
+                'NavbarSearch': 'Search',
+                'Screenfull': 'Screenfull',
+                'DataScreen': 'Data Screen',
+                'LangSelect': 'Language Select',
+                'ModeSwitch': 'Mode Switch',
+            }
+        },
+        'tabs': {
+            'title': 'Tabs',
+            'children': {
+                'show': {
+                    'title': 'Show Tabs'
+                },
+                'showIcon': {
+                    'title': 'Show Tabs Icon'
+                },
+                'height': {
+                    'title': 'Tabs Height'
+                },
+                'style': {
+                    'title': 'Tabs Style',
+                    'placeholder': 'Select Style',
+                    'options': {
+                        'card': 'Card',
+                        'button': 'Button',
+                        'line': 'Line',
+                        'chrome': 'Chrome',
+                    }
+                },
+                'draggable': {
+                    'title': 'Draggable'
+                },
+            }
+        },
+        'sidebar': {
+            'title': 'Sidebar',
+            'children': {
+                'width': {
+                    'title': 'Sidebar Width'
+                },
+                'itemHeight': {
+                    'title': 'Item Height'
+                },
+                'style': {
+                    'title': 'Sidebar Style',
+                    'placeholder': '',
+                    'options': {
+                        'card': 'Card'
+                    }
+                },
+                'dark': {
+                    'title': 'Dark Sidebar',
+                    'tip': 'Takes effect only in daylight mode'
+                },
+                'uniqueOpened': {
+                    'title': 'Accordion',
+                    'tip': 'In accordion mode, only one submenu is allowed to expand'
                 }
-            },
-            'language': {
-                'title': 'Language',
-                'placeholder': 'Select Language',
-                'options': {
-                    'en': 'English',
-                    'zh': '简体中文',
-                }
-            },
-            'pageAnimateType': {
-                'title': 'Page Animate Type',
-                'options': {
-                    'fade': 'Fade',
-                    'fade-zoom': 'Fade Zoom',
-                    'slide-right': 'Slide Right',
-                    'slide-bottom': 'Slide Bottom',
-                    'flip': 'Flip',
-                    'none': 'None',
-                }
-            },
-            'dynamicTitle': {
-                'title': 'Dynamic Title'
-            },
-            'watermark': {
-                'title': 'Watermark'
-            },
-            'grey': {
-                'title': 'Grey'
-            },
-            'headerHeight': {
-                'title': 'Header Height'
-            },
-            'fixedHeader': {
-                'title': 'Fixed Header',
-                'tip': 'When turned on, the navbar and tabs bar will be fixed to the top'
-            },
-            'showBreadcrumb': {
-                'title': 'Show Breadcrumb'
-            },
-            'showBreadcrumbIcon': {
-                'title': 'Show Breadcrumb Icon'
-            },
-            'tabsHeight': {
-                'title': 'Tabs Height'
-            },
-            'tabsStyle': {
-                'title': 'Tabs Style',
-                'placeholder': '',
-                'options': {
-                    'card': 'Card',
-                    'button': 'Button',
-                    'line': 'Line',
-                    'chrome': 'Chrome',
-                    'trape': 'Trape'
-                }
-            },
-            'showTabs': {
-                'title': 'Show Tabs'
-            },
-            'showTabsIcon': {
-                'title': 'Show Tabs Icon'
-            },
-            'draggable': {
-                'title': 'Draggable'
-            },
-            'sidebarWidth': {
-                'title': 'Sidebar Width'
-            },
-            'sidebarItemHeight': {
-                'title': 'Sidebar Item Height'
-            },
-            'sidebarStyle': {
-                'title': 'Sidebar Item Style',
-                'placeholder': '',
-                'options': {
-                    'card': 'Card'
-                }
-            },
-            'darkSidebar': {
-                'title': 'Dark Sidebar',
-                'tip': 'Takes effect only in daylight mode'
-            },
-            'uniqueOpened': {
-                'title': 'Accordion',
-                'tip': 'In accordion mode, only one submenu is allowed to expand'
-            },
-            'theme_primary': {
-                'title': 'Primary Color'
-            },
-            'theme_success': {
-                'title': 'Scuccess Color'
-            },
-            'theme_info': {
-                'title': 'Info Color'
-            },
-            'theme_warning': {
-                'title': 'Warning Color'
-            },
-            'theme_danger': {
-                'title': 'Danger Color'
-            },
-            'navToolbar': {
-                'options': {
-                    'NavbarSearch': 'Search',
-                    'Screenfull': 'Screenfull',
-                    'DataScreen': 'Data Screen',
-                    'LangSelect': 'Language Select',
-                    'ModeSwitch': 'Mode Switch',
-                }
+            }
+        },
+        'copyright': {
+            'title': 'Copyright',
+            'children': {
+                'show': {
+                    'title': 'Show Copyright'
+                },
+                'company': {
+                    'title': 'Company Name',
+                    'placeholder': 'Please enter company name',
+                },
+                'date': {
+                    'title': 'Year',
+                    'placeholder': 'Please enter year',
+                },
+                'icp': {
+                    'title': 'ICP License Number',
+                    'placeholder': 'Please enter ICP License Number',
+                },
             }
         }
     }

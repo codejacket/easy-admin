@@ -3,8 +3,8 @@
         <easy-form ref="query-form" class="query-form" v-bind="$attrs" v-if="show" inline>
             <slot />
             <el-form-item>
-                <easy-button type="primary" i="search" :t="$t('common.search')" plain @click="search" />
-                <easy-button i="refresh" :t="$t('common.reset')" v-on-click-rotate plain @click="reset" />
+                <easy-button type="primary" i="search" t="common.search" plain @click="search" />
+                <easy-button i="refresh" t="common.reset" v-on-click-rotate plain @click="reset" />
             </el-form-item>
         </easy-form>
     </el-collapse-transition>
@@ -51,6 +51,7 @@ export default {
 
         .query-form-item,
         .el-input,
+        .el-select,
         .el-date-editor {
             width: 200px;
         }

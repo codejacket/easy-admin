@@ -13,13 +13,9 @@ export const useUserStore = defineStore('user', {
     }),
     actions: {
         // 登录
-        async login(userInfo) {
-            const username = userInfo.username.trim()
-            const password = userInfo.password
-            const code = userInfo.code
-            const uuid = userInfo.uuid
-            const res = await login(username, password, code, uuid)
-            setToken(this.token = res.token)
+        async login({ username, password }) {
+            const { token } = await login(username, password)
+            setToken(this.token = token)
         },
         // 退出系统
         async logout() {
@@ -36,16 +32,16 @@ export const useUserStore = defineStore('user', {
         },
         // 获取用户信息
         async getInfo() {
-            const res = await getInfo()
-            const user = res.user
+            const { data } = await getInfo()
+            const user = data.user
             this.$patch(state => {
                 state.name = user.username
                 state.nickname = user.nickname
                 state.avatar = user.avatar
-                if (res.roles instanceof Array) state.roles = res.roles
-                if (res.permissions instanceof Array) state.permissions = res.permissions
+                if (data.roles instanceof Array) state.roles = data.roles
+                if (data.permissions instanceof Array) state.permissions = data.permissions
             })
-            return res
+            return data
         }
     }
 })

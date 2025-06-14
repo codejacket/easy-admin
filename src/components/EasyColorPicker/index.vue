@@ -1,28 +1,14 @@
 <template>
-    <el-tooltip 
-        effect="light"
-        trigger="click"
-        popper-class="el-color-picker-dropdown"
-        transition="el-zoom-in-top"
-        :fallback-placements="['bottom', 'top', 'right', 'left']"
-        :teleported="teleported"
-        :offset="8"
-        :hide-after="0"
-        :gpu-acceleration="false"
-        :stop-popper-mouse-event="false"
-        persistent>
+    <el-tooltip effect="light" trigger="click" popper-class="el-color-picker-dropdown" transition="el-zoom-in-top"
+        :fallback-placements="['bottom', 'top', 'right', 'left']" :teleported="teleported" :offset="8" :hide-after="0"
+        :gpu-acceleration="false" :stop-popper-mouse-event="false" persistent>
         <template #default>
             <slot>
-                <div
-                    ref="triggerRef"
-                    v-bind="$attrs"
-                    role="button"
-                    class="el-color-picker el-color-picker--small"
+                <div ref="triggerRef" v-bind="$attrs" role="button" class="easy-color-picker"
                     :aria-description="$t('el.colorpicker.description', { color: modelValue || '' })">
                     <div class="el-color-picker__trigger">
                         <span class="el-color-picker__color">
-                            <span class="el-color-picker__color-inner"
-                                :style="{ backgroundColor: modelValue }">
+                            <span class="el-color-picker__color-inner" :style="{ backgroundColor: modelValue }">
                                 <span :style="{ color: textColor }">
                                     {{ color.toHex().toUpperCase() }}
                                 </span>
@@ -34,23 +20,19 @@
         </template>
         <template #content>
             <div class="color-picker-dropdown">
-                <div class="el-color-picker-panel"
-                    ref="panelRef"
-                    :style="{ backgroundColor: `hsl(${color.toHsl().h},100%,50%)` }"
-                    tabindex="1"
-                    @mousedown="handleMousedownPanel"
-                    @keydown="handleKeyDownPanel">
+                <div class="el-color-picker-panel" ref="panelRef"
+                    :style="{ backgroundColor: `hsl(${color.toHsl().h},100%,50%)` }" tabindex="1"
+                    @mousedown="handleMousedownPanel" @keydown="handleKeyDownPanel">
                     <div class="el-color-picker-pointer"
                         :style="{ background: modelValue, left: `${panel.x}px`, top: `${panel.y}px` }" />
                 </div>
                 <div class="el-color-picker-controls" :style="{ padding: `${showAlpha ? '10px 0' : '5px 0'}` }">
-                    <svg-icon tabindex="0" aria-hidden="false" class="color-absorber" icon="pin"
-                        @click="absorbColor" />
+                    <svg-icon tabindex="0" aria-hidden="false" class="color-absorber" icon="pin" @click="absorbColor" />
                     <div class="sliders">
-                        <input class="hue-slider" type="range" :value="color.toHsl().h" 
-                            min="0" max="360" @input="changeHue" />
-                        <input class="alpha-slider" type="range" :value="color.alpha() * 100" v-if="showAlpha"
-                            min="0" max="100" @input="changeAlpha" />
+                        <input class="hue-slider" type="range" :value="color.toHsl().h" min="0" max="360"
+                            @input="changeHue" />
+                        <input class="alpha-slider" type="range" :value="color.alpha() * 100" v-if="showAlpha" min="0"
+                            max="100" @input="changeAlpha" />
                     </div>
                 </div>
                 <div class="el-color-picker-input">
@@ -59,26 +41,26 @@
                             {{ colorFormatMap[colorFormatIndex] }}
                         </span>
                         <template v-if="colorFormatMap[colorFormatIndex] === 'hex'">
-                            <el-input v-model="input.hex" size="small" 
-                                @keyup.enter="handleEnterInput('hex')" @blur="handleEnterInput('hex')" />
+                            <el-input v-model="input.hex" size="small" @keyup.enter="handleEnterInput('hex')"
+                                @blur="handleEnterInput('hex')" />
                         </template>
                         <template v-else-if="colorFormatMap[colorFormatIndex] === 'rgb'">
-                            <el-input v-model="input.rgb.r" size="small" 
-                                @keyup.enter="handleEnterInput('rgb')" @blur="handleEnterInput('rgb')" />
-                            <el-input v-model="input.rgb.g" size="small" 
-                                @keyup.enter="handleEnterInput('rgb')" @blur="handleEnterInput('rgb')" />
-                            <el-input v-model="input.rgb.b" size="small" 
-                                @keyup.enter="handleEnterInput('rgb')" @blur="handleEnterInput('rgb')" />
+                            <el-input v-model="input.rgb.r" size="small" @keyup.enter="handleEnterInput('rgb')"
+                                @blur="handleEnterInput('rgb')" />
+                            <el-input v-model="input.rgb.g" size="small" @keyup.enter="handleEnterInput('rgb')"
+                                @blur="handleEnterInput('rgb')" />
+                            <el-input v-model="input.rgb.b" size="small" @keyup.enter="handleEnterInput('rgb')"
+                                @blur="handleEnterInput('rgb')" />
                             <el-input v-model="input.rgb.a" size="small" v-if="showAlpha"
                                 @keyup.enter="handleEnterInput('rgb')" @blur="handleEnterInput('rgb')" />
                         </template>
                         <template v-else-if="colorFormatMap[colorFormatIndex] === 'hsl'">
-                            <el-input v-model="input.hsl.h" size="small" 
-                                @keyup.enter="handleEnterInput('hsl')" @blur="handleEnterInput('hsl')" />
-                            <el-input v-model="input.hsl.s" size="small" 
-                                @keyup.enter="handleEnterInput('hsl')" @blur="handleEnterInput('hsl')" />
-                            <el-input v-model="input.hsl.l" size="small" 
-                                @keyup.enter="handleEnterInput('hsl')" @blur="handleEnterInput('hsl')" />
+                            <el-input v-model="input.hsl.h" size="small" @keyup.enter="handleEnterInput('hsl')"
+                                @blur="handleEnterInput('hsl')" />
+                            <el-input v-model="input.hsl.s" size="small" @keyup.enter="handleEnterInput('hsl')"
+                                @blur="handleEnterInput('hsl')" />
+                            <el-input v-model="input.hsl.l" size="small" @keyup.enter="handleEnterInput('hsl')"
+                                @blur="handleEnterInput('hsl')" />
                             <el-input v-model="input.rgb.a" size="small" v-if="showAlpha"
                                 @keyup.enter="handleEnterInput('hsl')" @blur="handleEnterInput('hsl')" />
                         </template>
@@ -258,14 +240,21 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.el-color-picker__trigger {
-    width: auto;
-    padding: 2px;
-    min-width: 32px;
-    .el-color-picker__color-inner span {
-        width: 64px;
+.easy-color-picker {
+    height: 24px;
+    outline: none;
+    position: relative;
+
+    .el-color-picker__trigger {
+        width: auto;
         padding: 2px;
-        font-size: 12px;
+        min-width: 32px;
+
+        .el-color-picker__color-inner span {
+            width: 64px;
+            padding: 2px;
+            font-size: 12px;
+        }
     }
 }
 
@@ -276,7 +265,7 @@ export default {
     .el-color-picker-panel {
         width: 225px;
         height: 225px;
-        background: linear-gradient(0deg,#000,#0000), linear-gradient(90deg,#fff,#0000);
+        background: linear-gradient(0deg, #000, #0000), linear-gradient(90deg, #fff, #0000);
         outline: none;
         position: relative;
 
@@ -284,9 +273,9 @@ export default {
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            box-shadow: 0 0 0 1.5px #fff,inset 0 0 1px 1px rgba(0,0,0,.3),0 0 1px 2px rgba(0,0,0,.4);
+            box-shadow: 0 0 0 1.5px #fff, inset 0 0 1px 1px rgba(0, 0, 0, .3), 0 0 1px 2px rgba(0, 0, 0, .4);
             position: absolute;
-            transform: translate(-50%,-50%);
+            transform: translate(-50%, -50%);
             cursor: pointer;
         }
     }
@@ -306,7 +295,8 @@ export default {
             color: var(--el-text-color-regular);
             cursor: pointer;
 
-            &:hover, &:focus {
+            &:hover,
+            &:focus {
                 background: rgba(128, 128, 128, 0.15);
             }
         }
@@ -339,22 +329,22 @@ export default {
 
             input[type="range"].hue-slider {
                 background: linear-gradient(to right,
-                    rgb(255, 0, 0) 0%,
-                    rgb(255, 255, 0) 17%,
-                    rgb(0, 255, 0) 33%,
-                    rgb(0, 255, 255) 50%,
-                    rgb(0, 0, 255) 67%,
-                    rgb(255, 0, 255) 83%,
-                    rgb(255, 0, 0) 100%);
+                        rgb(255, 0, 0) 0%,
+                        rgb(255, 255, 0) 17%,
+                        rgb(0, 255, 0) 33%,
+                        rgb(0, 255, 255) 50%,
+                        rgb(0, 0, 255) 67%,
+                        rgb(255, 0, 255) 83%,
+                        rgb(255, 0, 0) 100%);
             }
 
             input[type="range"].alpha-slider {
                 background-size: 12px 12px;
                 background-position: 0 0, 6px 0, 6px -6px, 0 6px;
-                background-image: linear-gradient(45deg, var(--el-color-picker-alpha-bg-a) 25%,var(--el-color-picker-alpha-bg-b) 25%),
-                    linear-gradient(135deg,var(--el-color-picker-alpha-bg-a) 25%,var(--el-color-picker-alpha-bg-b) 25%),
-                    linear-gradient(45deg,var(--el-color-picker-alpha-bg-b) 75%,var(--el-color-picker-alpha-bg-a) 75%),
-                    linear-gradient(135deg,var(--el-color-picker-alpha-bg-b) 75%,var(--el-color-picker-alpha-bg-a) 75%);
+                background-image: linear-gradient(45deg, var(--el-color-picker-alpha-bg-a) 25%, var(--el-color-picker-alpha-bg-b) 25%),
+                    linear-gradient(135deg, var(--el-color-picker-alpha-bg-a) 25%, var(--el-color-picker-alpha-bg-b) 25%),
+                    linear-gradient(45deg, var(--el-color-picker-alpha-bg-b) 75%, var(--el-color-picker-alpha-bg-a) 75%),
+                    linear-gradient(135deg, var(--el-color-picker-alpha-bg-b) 75%, var(--el-color-picker-alpha-bg-a) 75%);
                 --el-color-picker-alpha-bg-a: rgba(128, 128, 128, 0.4);
                 --el-color-picker-alpha-bg-b: transparent;
 

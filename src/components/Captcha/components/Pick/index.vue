@@ -8,7 +8,7 @@
                         <el-button link v-on-click-rotate v-prevent-reclick="500" :title="$t('common.refresh')">
                             <svg-icon icon="refresh" @click="refresh" />
                         </el-button>
-                        <easy-button type="primary" :t="$t('common.confirm')" size="small" @click="validate" />
+                        <easy-button type="primary" t="common.confirm" size="small" @click="validate" />
                     </div>
                 </h3>
                 <div class="loading" v-if="loading">{{ $t('message.loading') }}</div>
@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import { getCaptchaData, checkCaptcha } from "@/api/login"
+import { getCaptcha, checkCaptcha } from "@/api/login"
 
 export default {
     name: 'Pick',
@@ -73,7 +73,7 @@ export default {
             points: [],
             captchaData: {
                 img: '',
-                uuid: '',
+                code: '',
                 options: [],
             }
         }
@@ -94,19 +94,19 @@ export default {
             this.points = []
             this.captchaData = {
                 img: '',
-                uuid: '',
+                code: '',
                 options: [],
             }
         },
-        getCaptchaData() {
+        getCaptcha() {
             this.loading = true
-            getCaptchaData({
+            getCaptcha({
                 captchaType: 'pick'
-            }).then((res) => {
-                if (res.data) {
-                    this.captchaData.img = res.data.img
-                    this.captchaData.uuid = res.data.uuid
-                    this.captchaData.options = res.data.options
+            }).then(({ data }) => {
+                if (data) {
+                    this.captchaData.img = data.img
+                    this.captchaData.code = data.code
+                    this.captchaData.options = data.options
                     this.loading = false
                     this.result = undefined
                     this.points = []
@@ -134,7 +134,7 @@ export default {
         },
         refresh() {
             if (!this.checking && !this.result) {
-                this.getCaptchaData()
+                this.getCaptcha()
             }
         },
         validate() {
@@ -142,7 +142,7 @@ export default {
                 this.checking = true
                 checkCaptcha({
                     info: this.points,
-                    uuid: this.captchaData.uuid
+                    code: this.captchaData.code
                 }).then(() => {
                     this.checking = false
                     this.result = true
@@ -171,7 +171,7 @@ export default {
         visible(newVal) {
             this.reset()
             if (newVal) {
-                this.getCaptchaData()
+                this.getCaptcha()
             }
         }
     }

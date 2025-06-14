@@ -1,110 +1,137 @@
 <template>
-  <div class="app-card">
-    <h3 class="header p14">{{ $route.meta.title }}</h3>
-    <div class="body">
-      <div class="aside">
-        <div :class="['menu-item', { 'activeItem': i === activeIndex }]" v-for="(item, i) in menuList" :key="item"
-          @click="activeIndex = i">
-          <svg-icon :icon="item.icon" />
-          <span>{{ $t(item.title) }}</span>
-        </div>
-      </div>
-      <el-scrollbar style="width: 100%">
-        <div class="main">
-          <component :is="menuList[activeIndex].component" />
-        </div>
-      </el-scrollbar>
+    <div class="app-card m20">
+        <easy-table-pro :config="config">
+            <template #query="{ query, getList }">
+                <el-form-item prop="username" label="用户名">
+                    <el-input v-model="query.data.username" placeholder="请输入用户名" clearable @keyup.enter="getList" />
+                </el-form-item>
+                <el-form-item prop="nickname" label="昵称">
+                    <el-input v-model="query.data.nickname" placeholder="请输入昵称" clearable @keyup.enter="getList" />
+                </el-form-item>
+                <el-form-item prop="gender" label="性别">
+                    <el-select v-model="query.data.gender" placeholder="请选择性别" clearable>
+                        <el-option v-for="{ value, label } in genderOptions" key="value" :value="value" :label="label" />
+                    </el-select>
+                </el-form-item>
+                <el-form-item prop="email" label="邮箱">
+                    <el-input v-model="query.data.email" placeholder="请输入邮箱" clearable @keyup.enter="getList" />
+                </el-form-item>
+                <el-form-item prop="phoneNumber" label="手机号">
+                    <el-input v-model="query.data.phoneNumber" placeholder="请输入手机号" clearable @keyup.enter="getList" />
+                </el-form-item>
+                <el-form-item prop="status" label="状态">
+                    <el-select v-model="query.data.status" placeholder="请选择状态" clearable>
+                        <el-option v-for="{ value, label } in statusOptions" key="value" :value="value" :label="label" />
+                    </el-select>
+                </el-form-item>
+            </template>
+            <template #toolbar></template>
+            <template #table="{ openDialog, deleteItems }">
+                <el-table-column type="selection" width="40" />
+                <el-table-column prop="id" label="编号" width="60" />
+                <el-table-column prop="avatar" label="头像" width="80" :show-overflow-tooltip="false">
+                    <template #default="{ row }">
+                        <el-avatar class="abs-center" style="cursor:pointer" :size="32" :src="row.avatar" alt="avatar" 
+                            @click="showPreview(row)">
+                            <img src="@/assets/img/default-avatar.png" />
+                        </el-avatar>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="username" label="用户名" min-width="160" align="left" />
+                <el-table-column prop="nickname" label="昵称" width="160" />
+                <el-table-column prop="gender" label="性别" width="100" sortable>
+                    <template #default="{ row }">
+                        <el-tag v-if="row.gender === '0'">
+                            {{ genderOptions.find(option => option.value === row.gender).label }}
+                        </el-tag>
+                        <el-tag type="danger" v-if="row.gender === '1'">
+                            {{ genderOptions.find(option => option.value === row.gender).label }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="email" label="邮箱" width="160" />
+                <el-table-column prop="phoneNumber" label="电话" width="160" />
+                <el-table-column prop="status" label="状态" width="100">
+                    <template #default="{ row }">
+                        <el-tag type="success" v-if="row.status === '0'">
+                            {{ statusOptions.find(option => option.value === row.status).label }}
+                        </el-tag>
+                        <el-tag type="danger" v-if="row.status === '1'">
+                            {{ statusOptions.find(option => option.value === row.status).label }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="createTime" label="注册时间" :formatter="row => $parseTime(row.createTime)" width="180" hidden sortable />
+                <el-table-column :label="$t('common.operation')" width="180" fixed="right">
+                    <template #default="{ row }">
+                        <easy-button type="primary" i="edit" t="common.update" link @click="openDialog(row)" />
+                        <easy-button type="primary" i="delete" t="common.delete" link @click="deleteItems(row)" />
+                    </template>
+                </el-table-column>
+            </template>
+            <template #form="{ form }">
+                
+            </template>
+        </easy-table-pro>
+        <el-image-viewer v-if="imageViewer.open" :url-list="imageViewer.urlList" @close="imageViewer.open = false" />
     </div>
-  </div>
 </template>
 
 <i18n locale="en" src="./locales/en.json"></i18n>
 <i18n locale="zh" src="./locales/zh.json"></i18n>
 
 <script>
-import BaseInfo from './components/BaseInfo'
-import ResetPwd from './components/ResetPwd'
-import LoginLog from './components/LoginLog'
-
+import { listUser, getUser, addUser, updateUser, delUser } from '@api/system/user'
 export default {
-  name: "User",
-  components: { BaseInfo, ResetPwd, LoginLog },
-  data() {
-    return {
-      activeIndex: 0,
-      menuList: [
-        { title: "基本设置", icon: "user", component: 'BaseInfo' },
-        { title: "密码设置", icon: "lock", component: 'ResetPwd' },
-        { title: "登录日志", icon: "log", component: 'LoginLog' },
-      ]
+    name: 'User',
+    data() {
+        return {
+            config: {
+                api: {
+                    list: listUser,
+                    get: getUser,
+                    add: addUser,
+                    update: updateUser,
+                    del: delUser
+                },
+                query: {
+                    data: {
+                        username: '',
+                        nickname: '',
+                        gender: '',
+                        email: '',
+                        phoneNumber: '',
+                        status: ''
+                    }
+                },
+                dialog: {},
+                form: {
+                    data: {}
+                }
+            },
+            imageViewer: {
+                open: false,
+                urlList: []
+            },
+            genderOptions: [
+                { label: '男', value: '0' },
+                { label: '女', value: '1' }
+            ],
+            statusOptions: [
+                { label: '正常', value: '0' },
+                { label: '停用', value: '1' }
+            ]
+        }
+    },
+    methods: {
+        showPreview(row) {
+            if (row.avatar) {
+                this.imageViewer.open = true
+                this.imageViewer.urlList = [row.avatar]
+            }
+        }
     }
-  }
 }
 </script>
 
-<style lang="scss" scoped>
-.app-card {
-  height: calc(var(--main-height) - 40px);
-  margin: 20px;
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
-
-  .header {
-    padding-left: 20px;
-    border-bottom: 1px solid var(--el-border-color-light);
-    color: var(--el-text-color-regular);
-  }
-
-  .body {
-    height: 100%;
-    display: flex;
-    overflow: hidden;
-
-    .aside {
-      width: 200px;
-      padding: 16px;
-      border-right: 1px solid var(--el-border-color);
-
-      .menu-item {
-        height: 36px;
-        padding-left: 9px;
-        border-radius: 6px;
-        box-sizing: border-box;
-        color: var(--el-text-color-regular);
-        display: flex;
-        align-items: center;
-        user-select: none;
-        cursor: pointer;
-
-        svg {
-          color: var(--el-text-color-regular);
-          margin-right: 5px;
-        }
-
-        &:hover {
-          background: rgba(128, 128, 128, 0.08);
-        }
-
-        &.activeItem {
-          background: hsla(var(--el-color-primary-h),
-              calc(var(--el-color-primary-s) * 1%),
-              calc(var(--el-color-primary-l) * 1%), 0.08);
-
-          color: var(--el-color-primary);
-
-          svg {
-            color: var(--el-color-primary);
-          }
-        }
-      }
-    }
-
-    .main {
-      width: 100%;
-      padding: 16px;
-      box-sizing: border-box;
-    }
-  }
-}
-</style>
+<style lang="scss" scoped></style>

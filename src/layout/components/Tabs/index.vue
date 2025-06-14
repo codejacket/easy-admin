@@ -1,8 +1,8 @@
 <template>
-    <div :class="['tabs-container', tabsStyle]" :style="{ height: `${tabsHeight}px` }">
+    <div :class="['tabs-container', settingsStore.tabs.style]" :style="{ height: `${settingsStore.tabs.height}px` }">
         <ScrollPane ref="scrollPane" class="scroll-pane" @scroll="closeMenu">
-            <TabLink ref="tab" v-for="tab in tabs" :key="tab" :route="tab" :draggable="draggable"
-                :show-icon="showTabsIcon" :show-close="tab.name !== defaultTab"
+            <TabLink ref="tab" v-for="tab in tabs" :key="tab" :route="tab" :draggable="settingsStore.tabs.draggable"
+                :show-icon="settingsStore.tabs.showIcon" :show-close="tab.name !== defaultTab"
                 @contextmenu.prevent="openMenu($event, tab)" @close="closeTab(tab)" />
         </ScrollPane>
         <TabsToolbar />
@@ -32,9 +32,9 @@
 </template>
 
 <script>
-import { useSettingsStore } from '@/store/modules/settings'
-import { useTabsStore } from '@/store/modules/tabs'
-import { mapState, mapActions } from 'pinia'
+import { useSettingsStore } from '@store/settings'
+import { useTabsStore } from '@store/tabs'
+import { mapStores, mapState, mapActions } from 'pinia'
 import { useDraggable } from "vue-draggable-plus"
 
 import ScrollPane from "./ScrollPane"
@@ -50,10 +50,11 @@ export default {
             top: 0,
             visible: false,
             selectedTab: {},
+            draggableInstance: null,
         }
     },
     computed: {
-        ...mapState(useSettingsStore, ["tabsHeight", "tabsStyle", "showTabsIcon", "draggable"]),
+        ...mapStores(useSettingsStore),
         ...mapState(useTabsStore, ["tabs", "defaultTab"]),
         currentTabIndex() {
             return this.tabs.findIndex(t => t.path === this.$route.path)
@@ -85,9 +86,10 @@ export default {
         this.addTab(this.$route)
         this.draggableInstance = useDraggable(this.$refs.scrollPane.$el.querySelector(".el-scrollbar__view"), this.tabs, {
             animation: 150,
+            disabled: !this.settingsStore.tabs.draggable,
             ghostClass: "ghost"
         })
-        this.draggableInstance[this.draggable ? 'start' : 'pause']()
+        this.draggableInstance.start()
         document.body.addEventListener("click", this.closeMenu)
     },
     unmounted() {
@@ -190,8 +192,8 @@ export default {
             this.addTab(route)
             this.moveToCurrentTab()
         },
-        draggable(val) {
-            this.draggableInstance?.[val ? 'start' : 'pause']()
+        'settingsStore.tabs.draggable' (val) {
+            this.draggableInstance?.option?.('disabled', !val)
         }
     }
 }
@@ -214,8 +216,9 @@ export default {
         .contextmenu {
             padding: 5px 0;
             border-radius: 4px;
+            border: 1px solid var(--el-border-color-light);
             background: var(--el-bg-color-overlay);
-            box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.3);
+            box-shadow: var(--el-box-shadow-light);
             font-size: 12px;
             font-weight: 400;
             position: absolute;

@@ -32,6 +32,8 @@ export function parseTime(date, pattern = '{y}-{m}-{d} {h}:{i}:{s}') {
                 a: (date.getDay())
             }[key]
         })
+    } else if (typeof date === 'string' || typeof date === 'number') {
+        return parseTime(new Date(date), pattern)
     }
 }
 
@@ -55,11 +57,25 @@ export function dataURLToBlob(dataUrl) {
     return new Blob([u8a], { type })
 }
 
-// 删除数组中符合条件元素
-export function removeIf(arr, func) {
-    for (let i = arr.length - 1; i >= 0; i--) {
-        if (func(arr[i], i)) {
-            arr.splice(i, 1)
+// 数组去重
+export function add(arr, items, equals = (a, b) => a === b) {
+    for (const item of [].concat(items)) {
+        if (!arr.some(a => equals(a, item))) {
+            arr.push(item)
         }
+    }
+}
+
+// 打印日志并返回值
+export function log(obj) {
+    console.log(obj)
+    return obj
+}
+
+// 全局方法
+export default {
+    install(app) {
+        app.config.globalProperties.$parseTime = parseTime
+        app.config.globalProperties.$log = log
     }
 }

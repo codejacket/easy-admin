@@ -9,9 +9,10 @@
 </template>
 
 <script>
-import { useRouteStore } from '@/store/modules/route'
-import { mapState } from 'pinia'
+import { useRouteStore } from '@store/route'
 import { isExternal } from '@/utils/validate'
+import { treeToArray } from '@/utils/tree'
+import { mapState } from 'pinia'
 import Fuse from "fuse.js"
 
 export default {
@@ -24,15 +25,20 @@ export default {
       fuse: null,
     }
   },
-  computed: { ...mapState(useRouteStore, ["listRoutes"]) },
+  computed: {
+    ...mapState(useRouteStore, ["sidebarRoutes"]),
+    searchPool() {
+      return treeToArray(this.sidebarRoutes, ({ path, meta, query }, parentNodes) => {
+        return {
+          path,
+          query,
+          title: parentNodes.map(node => node.meta.title).concat(meta.title).join(" > ")
+        }
+      })
+    }
+  },
   created() {
-    let searchPool = this.listRoutes.map(({ meta, path, query }) => {
-      return {
-        title: meta.title.join(" > "),
-        path, query
-      }
-    })
-    this.fuse = new Fuse(searchPool, {
+    this.fuse = new Fuse(this.searchPool, {
       shouldSort: true,
       threshold: 0.4,
       location: 0,
@@ -64,7 +70,7 @@ export default {
       if (isExternal(path)) {
         window.open(path)
       } else {
-        this.$router.push({ path: '/' + path, query })
+        this.$router.push({ path, query })
       }
     },
   }
@@ -97,6 +103,7 @@ export default {
     --el-border-color: var(--el-color-info-light-3);
 
     :deep(input) {
+      width: 11px;
       border-radius: 0;
       border: 0;
       padding-left: 0;

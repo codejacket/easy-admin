@@ -5,7 +5,7 @@ export const session = {
     getItem(key) {
         return JSON.parse(sessionStorage.getItem(key) ?? "null")
     },
-    remove(key) {
+    removeItem(key) {
         sessionStorage.removeItem(key)
     }
 }
@@ -17,7 +17,7 @@ export const local = {
     getItem(key) {
         return JSON.parse(localStorage.getItem(key) ?? "null")
     },
-    remove(key) {
+    removeItem(key) {
         localStorage.removeItem(key)
     }
 }

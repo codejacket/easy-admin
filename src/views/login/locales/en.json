@@ -1,6 +1,6 @@
 {
-    "account": "Account",
-    "password": "Password",
+    "account": "Account: admin",
+    "password": "Password: admin1234",
     "captcha": "Captcha",
     "remember": "Remember me",
     "register": "Register now",

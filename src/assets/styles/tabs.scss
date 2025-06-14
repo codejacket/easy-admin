@@ -1,10 +1,11 @@
 .tabs-container.button {
-    .scroll-pane .el-scrollbar__view {
+    .scroll-pane > .el-scrollbar__wrap > .el-scrollbar__view {
         padding-left: 6px;
         align-items: center;
 
         .tab {
             height: 26px;
+            margin-top: 2px;
             padding: 0 8px;
             border: 1px solid var(--el-border-color-light);
             background: var(--tabs-tag--bg);
@@ -53,7 +54,7 @@
         bottom: 0;
     }
 
-    .scroll-pane .el-scrollbar__view {
+    .scroll-pane > .el-scrollbar__wrap > .el-scrollbar__view {
         padding-left: 6px;
 
         .tab {
@@ -106,7 +107,7 @@
         bottom: 0;
     }
 
-    .scroll-pane .el-scrollbar__view {
+    .scroll-pane > .el-scrollbar__wrap > .el-scrollbar__view {
         .tab {
             height: 30px;
             padding: 2px 8px;
@@ -147,7 +148,7 @@
     .scroll-pane {
         width: inherit;
 
-        .el-scrollbar__view {
+        > .el-scrollbar__wrap > .el-scrollbar__view {
             padding-left: 10px;
 
             .tab {

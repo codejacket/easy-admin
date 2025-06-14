@@ -1,9 +1,21 @@
 export default {
     // 文字复制剪贴
-    mounted(el, { value, instance }) {
+    updated(el, { value, arg, instance }) {
         el.addEventListener('click', async () => {
-            await navigator.clipboard.writeText(value)
-            instance.$modal.message.success(instance.$t('message.copied'))
+            if (navigator.clipboard) {
+                await navigator.clipboard.writeText(value)
+            } else {
+                const tempTextarea = document.createElement('textarea')
+                tempTextarea.value = props.code
+                document.body.appendChild(tempTextarea)
+                tempTextarea.select()
+                document.execCommand('copy')
+                document.body.removeChild(tempTextarea)
+            }
+            instance.$modal.message({
+                message: instance.$t('message.copied'),
+                type: arg || 'success'
+            })
         })
     }
 }

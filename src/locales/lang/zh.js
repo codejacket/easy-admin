@@ -1,11 +1,12 @@
-import zh from 'element-plus/es/locale/lang/zh-cn'
+import zh from 'element-plus/dist/locale/zh-cn.mjs'
 
 export default {
     ...zh,
     dict: {},
     'system': {
         'title': 'Easy-Admin',
-        'copyright': '版权所有 © 2024 Easy-Admin All Rights Reserved.',
+        'icp': '备案号：{icp}',
+        'copyright': '版权所有 © {date} {company} 保留所有权利',
         'watermark': 'Easy-Admin',
     },
     'common': {
@@ -22,9 +23,12 @@ export default {
         'select': '选择',
         'add': '新增',
         'delete': '删除',
+        'import': '导入',
         'export': '导出',
         'update': '修改',
+        'edit': '编辑',
         'drag': '拖拽',
+        'copy': '复制',
         'operation': '操作',
         'refresh': '刷新',
         'expand': '展开',
@@ -83,137 +87,177 @@ export default {
         'default': '系统未知错误'
     },
     'settings': {
-        'title': {
-            'system': '系统',
-            'theme': '主题',
-            'navbar': '顶栏',
-            'navToolbar': '工具栏',
-            'tabs': '标签栏',
-            'sidebar': '侧边栏',
+        'system': {
+            'title': '系统',
+            'children': {
+                'mode': {
+                    'title': '模式',
+                    'options': {
+                        'light': '白天',
+                        'dark': '黑夜',
+                        'auto': '自动'
+                    }
+                },
+                'layout': {
+                    'options': {
+                        'vertical': '左侧菜单模式',
+                        'vertical-mix': '左侧菜单混合模式',
+                        'horizontal': '顶部菜单模式',
+                        'horizontal-mix': '顶部菜单混合模式',
+                    }
+                },
+                'language': {
+                    'title': '语言',
+                    'placeholder': '选择语言',
+                    'options': {
+                        'en': 'English',
+                        'zh': '简体中文',
+                    }
+                },
+                'pageAnimateType': {
+                    'title': '页面切换动画',
+                    'options': {
+                        'fade': '淡入淡出',
+                        'fade-zoom': '缩放淡入',
+                        'slide-right': '向右滑动',
+                        'slide-bottom': '向下滑动',
+                        'flip': '翻页',
+                        'none': '无',
+                    }
+                },
+                'dynamicTitle': {
+                    'title': '开启动态标题'
+                },
+                'watermark': {
+                    'title': '开启水印'
+                },
+                'grey': {
+                    'title': '灰色模式'
+                },
+                'colorWeak': {
+                    'title': '色弱模式'
+                },
+            }
         },
-        'subTitle': {
-            'mode': {
-                'title': '模式',
-                'options': {
-                    'light': '白天',
-                    'dark': '黑夜',
+        'theme': {
+            'title': '主题',
+            'children': {
+                'primary': {
+                    'title': '主题色'
+                },
+                'success': {
+                    'title': '成功色'
+                },
+                'info': {
+                    'title': '消息色'
+                },
+                'warning': {
+                    'title': '警告色'
+                },
+                'danger': {
+                    'title': '危险色'
                 }
-            },
-            'layout': {
-                'options': {
-                    'vertical': '左侧菜单模式',
-                    'vertical-mix': '左侧菜单混合模式',
-                    'horizontal': '顶部菜单模式',
-                    'horizontal-mix': '顶部菜单混合模式',
+            }
+        },
+        'header': {
+            'title': '顶栏',
+            'children': {
+                'height': {
+                    'title': '头部高度'
+                },
+                'fixed': {
+                    'title': '固定头部',
+                    'tip': '开启后，顶栏和标签栏将固定在顶部'
+                },
+                'showBreadcrumb': {
+                    'title': '显示面包屑'
+                },
+                'showBreadcrumbIcon': {
+                    'title': '显示面包屑图标'
+                },
+            }
+        },
+        'navToolbar': {
+            'title': '工具栏',
+            'options': {
+                'NavbarSearch': '搜索',
+                'Screenfull': '全屏',
+                'DataScreen': '数据大屏',
+                'LangSelect': '语言切换',
+                'ModeSwitch': '模式切换',
+            }
+        },
+        'tabs': {
+            'title': '标签栏',
+            'children': {
+                'show': {
+                    'title': '显示标签栏'
+                },
+                'showIcon': {
+                    'title': '显示标签栏图标'
+                },
+                'height': {
+                    'title': '标签栏高度'
+                },
+                'style': {
+                    'title': '标签栏风格',
+                    'placeholder': '请选择标签风格',
+                    'options': {
+                        'card': '卡片风格',
+                        'button': '按钮风格',
+                        'line': '线条风格',
+                        'chrome': '谷歌风格',
+                    }
+                },
+                'draggable': {
+                    'title': '开启标签拖拽'
+                },
+            }
+        },
+        'sidebar': {
+            'title': '侧边栏',
+            'children': {
+                'width': {
+                    'title': '侧边栏宽度'
+                },
+                'itemHeight': {
+                    'title': '菜单项高度'
+                },
+                'style': {
+                    'title': '菜单项风格',
+                    'placeholder': '',
+                    'options': {
+                        'card': '卡片风格'
+                    }
+                },
+                'dark': {
+                    'title': '深色侧边栏',
+                    'tip': '仅在白天模式生效'
+                },
+                'uniqueOpened': {
+                    'title': '手风琴模式',
+                    'tip': '手风琴模式下，只允许一个子菜单展开'
                 }
-            },
-            'language': {
-                'title': '语言',
-                'placeholder': '选择语言',
-                'options': {
-                    'en': 'English',
-                    'zh': '简体中文',
-                }
-            },
-            'pageAnimateType': {
-                'title': '页面切换动画',
-                'options': {
-                    'fade': '淡入淡出',
-                    'fade-zoom': '缩放淡入',
-                    'slide-right': '向右滑动',
-                    'slide-bottom': '向下滑动',
-                    'flip': '翻页',
-                    'none': '无',
-                }
-            },
-            'dynamicTitle': {
-                'title': '开启动态标题'
-            },
-            'watermark': {
-                'title': '开启水印'
-            },
-            'grey': {
-                'title': '灰色模式'
-            },
-            'headerHeight': {
-                'title': '头部高度'
-            },
-            'fixedHeader': {
-                'title': '固定头部',
-                'tip': '开启后，顶栏和标签栏将固定在顶部'
-            },
-            'showBreadcrumb': {
-                'title': '显示面包屑'
-            },
-            'showBreadcrumbIcon': {
-                'title': '显示面包屑图标'
-            },
-            'tabsHeight': {
-                'title': '标签栏高度'
-            },
-            'tabsStyle': {
-                'title': '标签栏风格',
-                'placeholder': '',
-                'options': {
-                    'card': '卡片风格',
-                    'button': '按钮风格',
-                    'line': '线条风格',
-                    'chrome': '谷歌风格',
-                }
-            },
-            'showTabs': {
-                'title': '显示标签栏'
-            },
-            'showTabsIcon': {
-                'title': '显示标签栏图标'
-            },
-            'draggable': {
-                'title': '开启标签拖拽'
-            },
-            'sidebarWidth': {
-                'title': '侧边栏宽度'
-            },
-            'sidebarItemHeight': {
-                'title': '菜单项高度'
-            },
-            'sidebarStyle': {
-                'title': '侧边栏菜单项风格',
-                'placeholder': '',
-                'options': {
-                    'card': '卡片风格'
-                }
-            },
-            'darkSidebar': {
-                'title': '深色侧边栏',
-                'tip': '仅在白天模式生效'
-            },
-            'uniqueOpened': {
-                'title': '手风琴模式',
-                'tip': '手风琴模式下，只允许一个子菜单展开'
-            },
-            'theme_primary': {
-                'title': '主题色'
-            },
-            'theme_success': {
-                'title': '成功色'
-            },
-            'theme_info': {
-                'title': '信息色'
-            },
-            'theme_warning': {
-                'title': '警告色'
-            },
-            'theme_danger': {
-                'title': '错误色'
-            },
-            'navToolbar': {
-                'options': {
-                    'NavbarSearch': '搜索',
-                    'Screenfull': '全屏',
-                    'DataScreen': '数据大屏',
-                    'LangSelect': '语言切换',
-                    'ModeSwitch': '模式切换',
-                }
+            }
+        },
+        'copyright': {
+            'title': '版权',
+            'children': {
+                'show': {
+                    'title': '显示版权'
+                },
+                'company': {
+                    'title': '公司名称',
+                    'placeholder': '请输入公司名称',
+                },
+                'date': {
+                    'title': '年份',
+                    'placeholder': '请输入年份',
+                },
+                'icp': {
+                    'title': 'ICP备案号',
+                    'placeholder': '请输入ICP备案号',
+                },
             }
         }
     }

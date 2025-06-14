@@ -3,20 +3,19 @@
         <el-header v-show="!tabFullscreen">
             <Navbar>
                 <SystemLogo class="logo-container" />
-                <Menu :data="treeRoutes.find(item => item.path === $route.path.split('/')[1])?.children"
-                    :collapse="false" mode="horizontal">
+                <Menu :data="subMenu?.children" :collapse="false" mode="horizontal">
                     <template #default="{ meta }">
                         <svg-icon class="menu-icon" :icon="meta.icon" />
-                        <span>{{ meta.title }}</span>
+                        <span class="text-ellipsis">{{ meta.title }}</span>
                     </template>
                 </Menu>
             </Navbar>
         </el-header>
         <el-container>
-            <el-aside :style="{ height: `calc(100vh - ${headerHeight}px)` }" v-show="!tabFullscreen">
+            <el-aside :style="{ height: `calc(100vh - ${header.height}px)` }" v-show="!tabFullscreen">
                 <Sidebar :style="{ width: `${collapse ? 54 : 90}px` }">
-                    <el-menu class="sidebar-menu" :default-active="$route.path.split('/')[1]">
-                        <el-menu-item v-for="item in treeRoutes" :key="item.path" :index="item.path"
+                    <el-menu class="sidebar-menu" :default-active="$route.matched[1]?.path">
+                        <el-menu-item v-for="item in sidebarRoutes" :key="item.path" :index="item.path"
                             @click="handleClick(item)">
                             <svg-icon :icon="item.meta.icon" />
                             <span v-if="!collapse">{{ item.meta.title }}</span>
@@ -30,10 +29,10 @@
                 </Sidebar>
             </el-aside>
             <el-main>
-                <Tabs v-if="showTabs && fixedHeader" />
+                <Tabs v-if="tabs.show && header.fixed" />
                 <el-scrollbar class="main-scrollbar"
-                    :style="{ height: `calc(100vh - ${headerHeight + !tabFullscreen * tabsHeight}px)` }">
-                    <Tabs v-if="showTabs && !fixedHeader" />
+                    :style="{ height: `calc(100vh - ${header.height + !tabFullscreen * tabs.height}px)` }">
+                    <Tabs v-if="tabs.show && !header.fixed" />
                     <AppMain />
                 </el-scrollbar>
             </el-main>
@@ -42,9 +41,9 @@
 </template>
 
 <script>
-import { useAppStore } from '@/store/modules/app'
-import { useRouteStore } from '@/store/modules/route'
-import { useSettingsStore } from '@/store/modules/settings'
+import { useAppStore } from '@store/app'
+import { useRouteStore } from '@store/route'
+import { useSettingsStore } from '@store/settings'
 import { mapState } from 'pinia'
 import { isExternal } from '@/utils/validate'
 import { findFirstLeafNode } from '@/utils/tree'
@@ -62,21 +61,32 @@ export default {
     components: { Sidebar, SystemLogo, Menu, Navbar, Tabs, AppMain, Hamburger },
     computed: {
         ...mapState(useAppStore, ["collapse", "tabFullscreen"]),
-        ...mapState(useRouteStore, ["treeRoutes"]),
-        ...mapState(useSettingsStore, ["headerHeight", "fixedHeader", "showTabs", "tabsHeight"])
+        ...mapState(useRouteStore, ["sidebarRoutes"]),
+        ...mapState(useSettingsStore, ["header", "tabs"]),
+    },
+    data() {
+        return {
+            subMenu: null
+        }
     },
     methods: {
         // 查找第一个叶子节点
         findFirstLeafNode,
         handleClick(route) {
-            route = route.hasOwnProperty('children') ? this.findFirstLeafNode(this.treeRoutes.find(item => item.path === route.path).children) : route
-            if (isExternal(route.path)) {
-                window.open(route.path)
+            let { path, query } = Array.isArray(route.children) ? this.findFirstLeafNode(route.children) : route
+            if (isExternal(path)) {
+                this.subMenu = route
+                window.open(path)
             } else {
-                this.$router.push({
-                    path: `/${route.path}`,
-                    query: route.query
-                })
+                this.$router.push({ path, query })
+            }
+        }
+    },
+    watch: {
+        $route: {
+            immediate: true,
+            handler() {
+                this.subMenu = this.sidebarRoutes.find(item => item.path === this.$route.matched[1]?.path)
             }
         }
     }
@@ -153,6 +163,7 @@ export default {
 
                     span {
                         line-height: normal;
+                        font-size: smaller;
                     }
                 }
             }

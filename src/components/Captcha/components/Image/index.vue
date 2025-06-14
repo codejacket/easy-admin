@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import { getCaptchaData, checkCaptcha } from "@/api/login"
+import { getCaptcha, checkCaptcha } from "@/api/login"
 
 export default {
     name: 'Image',
@@ -32,12 +32,12 @@ export default {
             code: '',
             captchaData: {
                 img: '',
-                uuid: '',
+                code: '',
             }
         }
     },
     created() {
-        this.getCaptchaData()
+        this.getCaptcha()
     },
     methods: {
         open() {
@@ -45,7 +45,7 @@ export default {
                 this.checking = true
                 checkCaptcha({
                     code: this.code,
-                    uuid: this.captchaData.uuid
+                    code: this.captchaData.code
                 }).then(() => {
                     this.checking = false
                     this.result = true
@@ -61,14 +61,14 @@ export default {
                 })
             }
         },
-        getCaptchaData() {
+        getCaptcha() {
             this.loading = true
-            getCaptchaData({
+            getCaptcha({
                 captchaType: 'image'
             }).then((res) => {
                 if (res.data) {
                     this.captchaData.img = res.data.img
-                    this.captchaData.uuid = res.data.uuid
+                    this.captchaData.code = res.data.code
                     this.loading = false
                     this.result = undefined
                     this.code = ''
@@ -77,7 +77,7 @@ export default {
         },
         refresh() {
             if (!this.checking && !this.result) {
-                this.getCaptchaData()
+                this.getCaptcha()
             }
         }
     }

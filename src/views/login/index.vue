@@ -29,13 +29,13 @@
           {{ $t('register') }}
         </router-link>
       </div>
-      <easy-button :t="$t(loading ? 'logging' : 'login')" style="width:100%" type="primary" :loading="loading"
-        auto-insert-space @click.native.prevent="validate" />
+      <easy-button style="width:100%" type="primary" :t="loading ? 'logging' : 'login'" :loading="loading" auto-insert-space 
+        @click.native.prevent="validate" />
     </el-form>
     <div class="login-tools">
       <LangSelect />
     </div>
-    <span class="copyright">{{ $t('system.copyright') }}</span>
+    <Copyright class="copyright" />
   </div>
 </template>
 
@@ -45,17 +45,18 @@
 <script>
 import Cookies from "js-cookie"
 import { encrypt, decrypt } from '@/utils/jsencrypt'
-import { useAppStore } from '@/store/modules/app'
-import { useUserStore } from '@/store/modules/user'
+import { useAppStore } from '@store/app'
+import { useUserStore } from '@store/user'
 import { mapState } from 'pinia'
 
 import SystemLogo from '@/components/SystemLogo'
+import Copyright from '@/components/Copyright'
 import Captcha from '@/components/Captcha'
 import LangSelect from '@/components/LangSelect'
 
 export default {
   name: 'Login',
-  components: { SystemLogo, Captcha, LangSelect },
+  components: { SystemLogo, Copyright, Captcha, LangSelect },
   data() {
     return {
       img: "",
@@ -89,9 +90,9 @@ export default {
       let password = Cookies.get("password")
       let rememberMe = Cookies.get('rememberMe')
       this.loginForm = {
-        username: username === undefined ? this.loginForm.username : username,
+        username: username ?? this.loginForm.username,
         password: password === undefined ? this.loginForm.password : decrypt(password),
-        rememberMe: rememberMe === undefined ? false : Boolean(rememberMe)
+        rememberMe: Boolean(rememberMe)
       }
     },
     validate() {
@@ -140,7 +141,7 @@ export default {
 
   &::before {
     content: '';
-    background-image: url("@/assets/images/login-background.jpg");
+    background-image: url("@/assets/img/login-background.jpg");
     background-size: cover;
     filter: hue-rotate(calc((var(--el-color-primary-h) - 214) * 1deg));
     position: fixed;
@@ -203,11 +204,10 @@ export default {
   }
 
   .copyright {
-    color: var(--el-text-color-secondary);
-    font-size: 12px;
+    color: #999;
     position: absolute;
     left: 50%;
-    bottom: 18px;
+    bottom: 16px;
     transform: translateX(-50%);
   }
 }

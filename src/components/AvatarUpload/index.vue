@@ -1,13 +1,13 @@
 <template>
     <div class="avatar-upload" :title="$t('clickUploadAvatar')" @click="openDialog">
         <el-avatar class="avatar" :src="img" alt="avatar">
-            <img src="@/assets/images/default-avatar.png" />
+            <img src="@/assets/img/default-avatar.png" />
         </el-avatar>
         <el-dialog class="avatar-upload-dialog" :title="$t('changeAvatar')" v-model="open" width="400px" append-to-body
             @opened="openDialog" @close="closeDialog">
             <div class="cropper-container">
-                <vue-cropper 
-                    ref="cropperRef" 
+                <vue-cropper
+                    ref="cropperRef"
                     v-if="visible" 
                     :img="options.img" 
                     :autoCrop="options.autoCrop"
@@ -19,7 +19,7 @@
             </div>
             <div class="btn-group">
                 <el-upload :http-request="httpRequest" :show-file-list="false" :before-upload="beforeUpload">
-                    <easy-button class="upload-btn" i="upload" :t="$t('upload')" />
+                    <easy-button class="upload-btn" i="upload" t="upload" />
                 </el-upload>
                 <el-tooltip :content="$t('zoomIn')" placement="top" :show-after="300">
                     <easy-button i="zoom-in" @click="changeScale(1)" />
@@ -35,8 +35,8 @@
                 </el-tooltip>
             </div>
             <template #footer>
-                <easy-button :t="$t('common.cancel')" auto-insert-space @click="closeDialog" />
-                <easy-button type="primary" :t="$t('common.confirm')" auto-insert-space @click="confirm" />
+                <easy-button t="common.cancel" auto-insert-space @click="closeDialog" />
+                <easy-button type="primary" t="common.confirm" auto-insert-space @click="confirm" />
             </template>
         </el-dialog>
     </div>

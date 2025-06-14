@@ -1,27 +1,30 @@
 <template>
   <section class="app-main">
     <router-view v-slot="{ Component, route }">
-      <Transition mode="out-in" :name="route.meta?.transition || pageAnimateType || ''">
+      <transition mode="out-in" :name="route.meta?.transition || system.pageAnimateType || ''">
         <keep-alive :include="cachesTabs" v-if="!isRefresh">
           <component :is="Component" :key="route.path" />
         </keep-alive>
-      </Transition>
+      </transition>
     </router-view>
-    <back-top />
+    <Copyright class="copyright" v-if="copyright.show" />
   </section>
 </template>
 
 <script>
-import { useAppStore } from '@/store/modules/app'
-import { useSettingsStore } from '@/store/modules/settings'
-import { useTabsStore } from '@/store/modules/tabs'
+import { useAppStore } from '@store/app'
+import { useSettingsStore } from '@store/settings'
+import { useTabsStore } from '@store/tabs'
 import { mapState, mapWritableState } from 'pinia'
+
+import Copyright from '@/components/Copyright'
 
 export default {
   name: "AppMain",
+  components: { Copyright },
   computed: {
     ...mapWritableState(useAppStore, ["isRefresh"]),
-    ...mapState(useSettingsStore, ["pageAnimateType"]),
+    ...mapState(useSettingsStore, ["system", "copyright"]),
     ...mapState(useTabsStore, ["cachesTabs"]),
   },
   watch: {
@@ -42,8 +45,15 @@ export default {
 
 <style lang="scss" scoped>
   .app-main {
-    width: 100%;
-    height: 100%;
+    min-height: var(--main-height);
     background: var(--base-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .copyright {
+      padding: 12px 0;
+      text-align: center;
+    }
   }
 </style>

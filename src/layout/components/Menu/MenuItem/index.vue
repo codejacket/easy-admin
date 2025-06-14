@@ -3,13 +3,15 @@
     <template #title>
       <slot :meta="item.meta" />
     </template>
-    <MenuItem v-for="item in item.children" :key="item.path" :item="item" v-show="item.meta && !item.meta.hidden">
-      <template #default="{ meta }">
-        <slot :meta="meta" />
-      </template>
-    </MenuItem>
+    <template v-for="item in item.children" :key="item.path">
+      <MenuItem :item="item" v-if="item.meta && !item.meta.hidden">
+        <template #default="{ meta }">
+          <slot :meta="meta" />
+        </template>
+      </MenuItem>
+    </template>
   </el-sub-menu>
-  <el-menu-item v-else :index="`/${item.path}`" @click="handleClick">
+  <el-menu-item v-else :index="item.path" @click="handleClick">
     <slot :meta="item.meta" />
   </el-menu-item>
 </template>
@@ -31,7 +33,7 @@ export default {
         window.open(this.item.path)
       } else {
         this.$router.push({
-          path: `/${this.item.path}`,
+          path: this.item.path,
           query: this.item.query
         })
       }

@@ -9,7 +9,7 @@ const mockDir = path.join(process.cwd(), 'mock')
 
 module.exports = function (middlewares, devServer) {
     // 是否开启Mock
-    if (process.env.VUE_APP_MOCK) {
+    if (process.env.VUE_APP_MOCK === 'true') {
         devServer.app.use(bodyParser.json())
         devServer.app.use(bodyParser.urlencoded({ extended: false }))
         // 注册 拦截器
@@ -17,7 +17,7 @@ module.exports = function (middlewares, devServer) {
         // 注册 Mock api
         const res = registerApis(devServer.app)
         console.log(chalk.magentaBright(`Mock Server started successfully!`))
-        if (res && process.env.VUE_APP_MOCK_HOT_RELOAD) {
+        if (res && process.env.VUE_APP_MOCK_HOT_RELOAD === 'true') {
             mockHotReload(devServer.app, res.mockStartIndex, res.mocksLength)
         }
     }
@@ -45,9 +45,9 @@ function registerApis(app) {
     if (modules instanceof Array) {
         let mocksLength = 0
         modules.forEach(module => {
-            module.forEach(({ url, type, timeout, response }) => {
-                const mock = responseFake(url, type, timeout, response)
-                app[mock.type](mock.url, mock.response)
+            module.forEach(({ url, method, timeout, response }) => {
+                const mock = responseFake(url, method, timeout, response)
+                app[mock.method](mock.url, mock.response)
                 mocksLength++
             })
         })
@@ -80,10 +80,10 @@ function authMiddleware(req, res, next) {
     }
 }
 
-function responseFake(url, type, timeout, respond) {
+function responseFake(url, method, timeout, respond) {
     return {
         url,
-        type: type || 'get',
+        method: method || 'get',
         async response(req, res, next) {
             // console.log(chalk.magentaBright(`request invoke: ${req.path}`))
             if (typeof timeout === "number") await new Promise(resolve => setTimeout(resolve, timeout))

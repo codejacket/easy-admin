@@ -10,7 +10,9 @@ export function isEqual(obj1, obj2) {
 
 // 判断是否为blob格式
 export function isBlob(data) {
-    return data.type !== 'application/json'
+    if (data) {
+        return data.type !== 'application/json'
+    }
 }
 
 // 验证邮箱格式

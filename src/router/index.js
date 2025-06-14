@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, createWebHashHistory, createMemoryHistory } from 'vue-router'
 import Layout from '@/layout'
+import { beforeEachGuard, afterEachGuard } from './guard'
 
 // 路由模式
 const historyCreatorMap = {
@@ -10,6 +11,8 @@ const historyCreatorMap = {
 
 const router = createRouter({
     history: historyCreatorMap['history'](),
+    // 是否禁止尾部斜杠。
+    // strict: true,
     routes: [{
         path: '/login',
         name: 'Login',
@@ -18,10 +21,6 @@ const router = createRouter({
         path: '/register',
         name: 'Register',
         component: () => import('@/views/register/index.vue'),
-    }, {
-        path: '/applylicense',
-        name: 'Applylicense',
-        component: (resolve) => require(['@/views/applylicense/index.vue'], resolve),
     }, {
         path: '/401',
         name: '401',
@@ -44,10 +43,15 @@ const router = createRouter({
     }]
 })
 
-// 捕捉连续点击多次路由报错
+// 全局捕捉路由异常
 let push = router.push
 router.push = function (to) {
     return push.call(this, to).catch(err => err)
 }
+
+// 前置路由守卫
+beforeEachGuard(router)
+// 后置路由守卫
+afterEachGuard(router)
 
 export default router

@@ -1,8 +1,8 @@
 const { menuList } = require(`${process.cwd()}/mock/data`)
 
 module.exports = [{
-    url: '/mock/getRouters',
-    type: 'get',
+    url: '/mock/routes',
+    method: 'get',
     response(req) {
         return {
             code: 200,

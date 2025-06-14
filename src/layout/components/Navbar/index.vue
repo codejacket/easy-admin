@@ -1,5 +1,5 @@
 <template>
-  <div class="navbar-container" :style="{ height: `${headerHeight}px` }">
+  <div class="navbar-container" :style="{ height: `${header.height}px` }">
     <div class="left-side">
       <slot />
     </div>
@@ -12,7 +12,7 @@
         <template #default="{ src, username }">
           <div class="avatar-wrapper">
             <el-avatar :size="28" :src="src" alt="avatar">
-              <img src="@/assets/images/default-avatar.png" />
+              <img src="@/assets/img/default-avatar.png" />
             </el-avatar>
             <span>{{ username }}</span>
             <svg-icon icon="R" />
@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { useSettingsStore } from '@/store/modules/settings'
+import { useSettingsStore } from '@store/settings'
 import { mapState } from 'pinia'
 
 import Avatar from "./Avatar"
@@ -33,7 +33,7 @@ export default {
   name: "Navbar",
   components: { Avatar },
   computed: {
-    ...mapState(useSettingsStore, ["headerHeight", "navToolbar"])
+    ...mapState(useSettingsStore, ["header", "navToolbar"])
   }
 }
 </script>
@@ -72,7 +72,8 @@ export default {
 
       .el-divider {
         height: 22px;
-        margin: 0 -6px;
+        margin-left: -2px;
+        margin-right: -6px;
         opacity: 0.4;
         border-left-width: 1px;
         border-color: var(--navbar-icon-fill-color);
