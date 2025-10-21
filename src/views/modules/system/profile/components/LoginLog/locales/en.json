@@ -1,0 +1,11 @@
+{
+  "columns": {
+    "id": "ID",
+    "msg": "Operation Message",
+    "ipAddress": "IP Address",
+    "loginLocation": "Login Location",
+    "browser": "Browser Type",
+    "os": "OS",
+    "loginTime": "Login Time"
+  }
+}

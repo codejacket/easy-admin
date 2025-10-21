@@ -1,13 +1,10 @@
-import cache from './modules/cache'
-import dict from './modules/dict'
-import download from './modules/download'
-import modal from './modules/modal'
+const modules = import.meta.glob('./modules/*.js', { eager: true })
 
 export default {
-    install(app) {
-        app.config.globalProperties.$cache = cache
-        app.config.globalProperties.$dict = dict
-        app.config.globalProperties.$download = download
-        app.config.globalProperties.$modal = modal
-    }
+  install(app) {
+    Object.entries(modules).forEach(([path, module]) => {
+      let name = path.match(/\.\/modules\/(.*)\.js$/)[1]
+      app.config.globalProperties[`$${name}`] = module.default ?? module
+    })
+  },
 }

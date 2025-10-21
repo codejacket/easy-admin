@@ -1,260 +1,268 @@
-<template>
-    <teleport to="body" :disabled="!appendToBody">
-        <div :class="{ 'el-overlay': appendToBody }" v-if="visible" @click="clickOverlay">
-            <div class="captcha-pick">
-                <h3 class="captcha-header">
-                    {{ $t('common.validate') }}
-                    <div class="flex">
-                        <el-button link v-on-click-rotate v-prevent-reclick="500" :title="$t('common.refresh')">
-                            <svg-icon icon="refresh" @click="refresh" />
-                        </el-button>
-                        <easy-button type="primary" t="common.confirm" size="small" @click="validate" />
-                    </div>
-                </h3>
-                <div class="loading" v-if="loading">{{ $t('message.loading') }}</div>
-                <div v-else class="captcha-img-container">
-                    <img class="captcha-img"
-                        :src="captchaData.img"
-                        alt="captcha"
-                        @click.prevent="onRecord($event)" />
-                    <span class="point"
-                        v-for="(point, index) in points"
-                        @click="onCancelRecord(index)"
-                        :style="{
-                            'left': `${point.x - 10}px`,
-                            'top': `${point.y - 10}px`
-                        }">
-                        {{ index + 1 }}
-                    </span>
-                </div>
-                <div class="captcha-prompt" v-if="result !== undefined">
-                    {{ result ? $t('message.validateSuccess') : $t('message.validateFailed') }}
-                </div>
-                <div class="captcha-prompt" v-else>
-                    {{ $t('message.captchaPickTip') + ' ' }}
-                    <span v-for="option in captchaData.options" :key="option">
-                        {{ option }}
-                    </span>
-                </div>
-            </div>
-        </div>
-    </teleport>
-</template>
+<script name="Pick" setup>
+import { useI18n } from 'vue-i18n'
 
-<script>
-import { getCaptcha, checkCaptcha } from "@/api/login"
+const props = defineProps({
+  getData: {
+    type: Function,
+  },
+  verify: {
+    type: Function,
+  },
+  appendToBody: {
+    type: Boolean,
+    default: true,
+  },
+  autoClose: {
+    type: Boolean,
+    default: true,
+  },
+  autoRefresh: {
+    type: Boolean,
+    default: true,
+  },
+})
 
-export default {
-    name: 'Pick',
-    expose: ['open', 'refresh'],
-    props: {
-        appendToBody: {
-            type: Boolean,
-            default: true
-        },
-        autoClose: {
-            type: Boolean,
-            default: true
-        },
-        autoRefresh: {
-            type: Boolean,
-            default: true
-        }
-    },
-    emits: ['success', 'failure'],
-    data() {
-        return {
-            visible: false,
-            loading: true,
-            // 正在验证
-            checking: false,
-            // 验证结果 { undefined: 未验证，true: 验证通过，false: 验证失败 }
-            result: undefined,
-            points: [],
-            captchaData: {
-                img: '',
-                code: '',
-                options: [],
-            }
-        }
-    },
-    computed: {
-        clickable() {
-            return !this.checking && this.result === undefined
-        }
-    },
-    methods: {
-        open() {
-            this.visible = true
-        },
-        reset() {
-            this.loading = true
-            this.checking = false
-            this.result = undefined
-            this.points = []
-            this.captchaData = {
-                img: '',
-                code: '',
-                options: [],
-            }
-        },
-        getCaptcha() {
-            this.loading = true
-            getCaptcha({
-                captchaType: 'pick'
-            }).then(({ data }) => {
-                if (data) {
-                    this.captchaData.img = data.img
-                    this.captchaData.code = data.code
-                    this.captchaData.options = data.options
-                    this.loading = false
-                    this.result = undefined
-                    this.points = []
-                }
-            })
-        },
-        onRecord(event) {
-            if (this.points.length < this.captchaData.options.length && this.clickable) {
-                this.points.push({
-                    x: event.offsetX,
-                    y: event.offsetY,
-                    t: Date.now()
-                })
-            }
-        },
-        onCancelRecord(index) {
-            if (this.clickable) {
-                this.points.splice(index, 1)
-            }
-        },
-        clickOverlay(e) {
-            if (e.target.className === 'el-overlay') {
-                this.visible = false
-            }
-        },
-        refresh() {
-            if (!this.checking && !this.result) {
-                this.getCaptcha()
-            }
-        },
-        validate() {
-            if (this.result === undefined) {
-                this.checking = true
-                checkCaptcha({
-                    info: this.points,
-                    code: this.captchaData.code
-                }).then(() => {
-                    this.checking = false
-                    this.result = true
-                    this.$emit('success')
-                    if (this.autoClose) {
-                        // 自动关闭验证码
-                        setTimeout(() => {
-                            this.visible = false
-                        }, 1000)
-                    }
-                }).catch(() => {
-                    this.checking = false
-                    this.result = false
-                    this.$emit('failure')
-                    if (this.autoRefresh) {
-                        // 自动刷新验证码
-                        setTimeout(() => {
-                            this.refresh()
-                        }, 1000)
-                    }
-                })
-            }
-        }
-    },
-    watch: {
-        visible(newVal) {
-            this.reset()
-            if (newVal) {
-                this.getCaptcha()
-            }
-        }
+const emits = defineEmits(['success', 'error'])
+const { t } = useI18n()
+
+const visible = ref(false)
+const loading = ref(true)
+// 正在验证
+const verifying = ref(false)
+// 验证结果 { undefined: 未验证，true: 验证通过，false: 验证失败 }
+const result = ref(undefined)
+const data = ref({
+  width: 350,
+  height: 200,
+  img: '',
+  options: [],
+  code: '',
+})
+const pointSize = 20
+const points = ref([])
+const clickable = computed(() => !verifying.value && result.value === undefined)
+const imgStyle = computed(() => ({
+  width: `${data.value.width}px`,
+  height: `${data.value.height}px`,
+}))
+
+watch(visible, newVal => {
+  reset()
+  if (newVal) {
+    getCaptcha()
+  }
+})
+
+defineExpose({ refresh, test })
+
+function clickOverlay(e) {
+  if (e.target.className === 'el-overlay') {
+    visible.value = false
+  }
+}
+
+async function getCaptcha() {
+  loading.value = true
+  data.value = await props.getData()
+  loading.value = false
+  result.value = undefined
+  points.value = []
+}
+
+function reset() {
+  loading.value = true
+  verifying.value = false
+  result.value = undefined
+  points.value = []
+  data.value = {
+    width: 350,
+    height: 200,
+    img: '',
+    options: [],
+    code: '',
+  }
+}
+
+function onRecord(e) {
+  if (points.value.length < data.value.options?.length && clickable.value) {
+    points.value.push({
+      x: e.offsetX,
+      y: e.offsetY,
+      t: Date.now(),
+    })
+  }
+}
+
+function onCancelRecord(index) {
+  if (clickable.value) {
+    points.value.splice(index, 1)
+  }
+}
+
+function refresh() {
+  if (!verifying.value && !result.value) {
+    getCaptcha()
+  }
+}
+
+async function validate() {
+  if (result.value === undefined) {
+    verifying.value = true
+    try {
+      await props.verify({
+        points: points.value,
+        code: data.value.code,
+      })
+      verifying.value = false
+      result.value = true
+      emits('success')
+      if (props.autoClose) {
+        // 自动关闭验证码
+        setTimeout(() => {
+          visible.value = false
+        }, 1000)
+      }
+    } catch {
+      verifying.value = false
+      result.value = false
+      emits('error')
+      if (props.autoRefresh) {
+        // 自动刷新验证码
+        setTimeout(() => {
+          refresh()
+        }, 1000)
+      }
     }
+  }
+}
+
+function test() {
+  visible.value = true
 }
 </script>
 
+<template>
+  <teleport :disabled="!appendToBody" to="body">
+    <div :class="{ 'el-overlay': appendToBody }" v-if="visible" @click="clickOverlay">
+      <div class="captcha-pick">
+        <h3 class="captcha-header">
+          {{ t('captchaTitle') }}
+          <div class="flex items-center">
+            <el-button v-click-rotate v-prevent-reclick="500" :title="$t('common.refresh')" link>
+              <svg-icon icon="refresh" @click="refresh" />
+            </el-button>
+            <easy-button type="primary" t="common.confirm" size="small" @click="validate" />
+          </div>
+        </h3>
+        <div class="loading" v-if="loading" :style="imgStyle">{{ $t('message.loading') }}</div>
+        <div class="relative" v-else>
+          <img
+            class="captcha-img"
+            :style="imgStyle"
+            :src="data.img"
+            alt="captcha"
+            @click.prevent="onRecord($event)"
+          />
+          <span
+            class="point"
+            v-for="(point, index) in points"
+            :style="{
+              width: `${pointSize}px`,
+              height: `${pointSize}px`,
+              left: `${point.x - pointSize / 2}px`,
+              top: `${point.y - pointSize / 2}px`,
+            }"
+            @click="onCancelRecord(index)"
+          >
+            {{ index + 1 }}
+          </span>
+        </div>
+        <div class="captcha-prompt">
+          <template v-if="result !== undefined">
+            {{ result ? t('validateSuccess') : t('validateFailed') }}
+          </template>
+          <template v-else>
+            <span class="mr-4px">{{ t('successTip') }}</span>
+            <span class="option" v-for="option in data.options" :key="option">
+              {{ option }}
+            </span>
+          </template>
+        </div>
+      </div>
+    </div>
+  </teleport>
+</template>
+
+<i18n src="./locales/en.json" locale="en" />
+<i18n src="./locales/zh-CN.json" locale="zh-CN" />
+
 <style lang="scss" scoped>
 .el-overlay {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .captcha-pick {
-    width: 350px;
-    padding: 12px;
-    border: 1px solid var(--el-border-color-extra-light);
-    border-radius: 10px;
-    background: var(--el-bg-color);
-    box-shadow: var(--el-box-shadow-lighter);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-extra-light);
+  border-radius: 10px;
+  box-shadow: var(--el-box-shadow-lighter);
 
-    .captcha-header {
-        margin-bottom: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 14px;
-        cursor: default;
+  .captcha-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    cursor: default;
+  }
 
-        .flex {
-            align-items: center;
-        }
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--el-color-info);
+  }
+
+  .captcha-img {
+    display: block;
+    cursor: pointer;
+    border: none;
+  }
+
+  .point {
+    position: absolute;
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    font-size: var(--el-font-size-small);
+    font-weight: bold;
+    line-height: 19px;
+    color: var(--el-color-white);
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    background-color: var(--el-color-primary);
+    border: 1px solid #f2f6fc;
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--el-color-white);
+  }
+
+  .captcha-prompt {
+    font-size: var(--el-font-size-base);
+    color: var(--el-color-info);
+    text-align: center;
+
+    .option {
+      margin-left: 10px;
+      font-size: var(--el-font-size-medium);
+      font-weight: bold;
+      color: var(--el-color-error);
     }
-
-    .loading {
-        width: 350px;
-        height: 200px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: var(--el-color-info);
-    }
-
-    .captcha-img-container {
-        position: relative;
-
-        .captcha-img {
-            width: 350px;
-            height: 200px;
-            border: none;
-            cursor: pointer;
-        }
-        .point {
-            width: 20px;
-            height: 20px;
-            border: 1px solid #f2f6fc;
-            border-radius: 30px;
-            box-sizing: border-box;
-            background-color: var(--el-color-primary);
-            box-shadow: 0 0 10px var(--el-color-white);
-            text-align: center;
-            line-height: 19px;
-            font-size: var(--el-font-size-small);
-            font-weight: bold;
-            color: var(--el-color-white);
-            position: absolute;
-            user-select: none;
-            cursor: pointer;
-        }
-    }
-
-    .captcha-prompt {
-        height: 40px;
-        line-height: 40px;
-        font-size: var(--el-font-size-base);
-        text-align: center;
-        color: var(--el-color-info);
-        span {
-            margin-left: 10px;
-            font-size: var(--el-font-size-medium);
-            font-weight: bold;
-            color: var(--el-color-error);
-        }
-    }
+  }
 }
 </style>

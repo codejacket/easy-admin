@@ -1,62 +1,61 @@
-import { createApp } from 'vue'
 import App from '@/App.vue'
-import store from '@/store'
-import router from '@/router'
-import utils from '@/utils'
-import plugins from '@/plugins'
 import directive from '@/directive'
-import { createMetaManager } from 'vue-meta'
 import i18n from '@/locales'
+import plugins from '@/plugins'
+import router from '@/router'
+import store from '@/store'
+import utils from '@/utils'
+import { createHead } from '@unhead/vue'
+import { createApp } from 'vue'
 
 // UI组件库
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 
-import '@/assets/styles/index.scss'
-import '@/utils/console'
-import '@/assets/svg'
+import '@/assets/style/index.scss'
+import '@/assets/svg/index.js'
+import 'virtual:uno.css'
 
-// 全局组件
-import SvgIcon from '@/components/SvgIcon'
-import QueryForm from '@/components/QueryForm'
-import TableToolbar from '@/components/TableToolbar'
+import EasyButton from '@/components/EasyButton'
+import EasyColorPicker from '@/components/EasyColorPicker'
+import EasyDialog from '@/components/EasyDialog'
+import EasyDrawer from '@/components/EasyDrawer'
 import EasyForm from '@/components/EasyForm'
 import EasyTable from '@/components/EasyTable'
 import EasyTablePro from '@/components/EasyTablePro'
-import EasyDialog from '@/components/EasyDialog'
-import EasyDrawer from '@/components/EasyDrawer'
-import EasyColorPicker from '@/components/EasyColorPicker'
-import EasyButton from '@/components/EasyButton'
 import Pagination from '@/components/Pagination'
-import BackTop from '@/components/BackTop'
-import JsonViewer from 'vue-json-viewer'
+import QueryForm from '@/components/QueryForm'
+import SvgIcon from '@/components/SvgIcon'
+import TableToolbar from '@/components/TableToolbar'
+import { JsonViewer } from 'vue3-json-viewer'
+
 const app = createApp(App)
+const head = createHead()
 
 // 禁用生产提示信息
 app.config.productionTip = false
 
-app.component(SvgIcon.name || 'SvgIcon', SvgIcon)
-app.component(QueryForm.name || 'QueryForm', QueryForm)
-app.component(TableToolbar.name || 'TableToolbar', TableToolbar)
+app.use(directive)
+app.use(i18n)
+app.use(plugins)
+app.use(router)
+app.use(store)
+app.use(utils)
+app.use(head)
+app.use(ElementPlus)
+
+app.component(EasyButton.name || 'EasyButton', EasyButton)
+app.component(EasyColorPicker.name || 'EasyColorPicker', EasyColorPicker)
+app.component(EasyDialog.name || 'EasyDialog', EasyDialog)
+app.component(EasyDrawer.name || 'EasyDrawer', EasyDrawer)
 app.component(EasyForm.name || 'EasyForm', EasyForm)
 app.component(EasyTable.name || 'EasyTable', EasyTable)
 app.component(EasyTablePro.name || 'EasyTablePro', EasyTablePro)
-app.component(EasyDialog.name || 'EasyDialog', EasyDialog)
-app.component(EasyDrawer.name || 'EasyDrawer', EasyDrawer)
-app.component(EasyColorPicker.name || 'EasyColorPicker', EasyColorPicker)
-app.component(EasyButton.name || 'EasyButton', EasyButton)
 app.component(Pagination.name || 'Pagination', Pagination)
-app.component(BackTop.name || 'BackTop', BackTop)
-app.component('JsonViewer', JsonViewer)
-
-app.use(store)
-app.use(router)
-app.use(utils)
-app.use(plugins)
-app.use(directive)
-app.use(createMetaManager(false, { meta: { tag: 'meta', nameless: true } }))
-app.use(i18n)
-app.use(ElementPlus)
+app.component(SvgIcon.name || 'SvgIcon', SvgIcon)
+app.component(QueryForm.name || 'QueryForm', QueryForm)
+app.component(TableToolbar.name || 'TableToolbar', TableToolbar)
+app.component(JsonViewer.name || 'JsonViewer', JsonViewer)
 
 app.mount('#app')

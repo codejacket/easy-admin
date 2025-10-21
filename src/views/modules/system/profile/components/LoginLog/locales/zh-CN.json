@@ -1,0 +1,11 @@
+{
+  "columns": {
+    "id": "编号",
+    "msg": "操作信息",
+    "ipAddress": "IP地址",
+    "loginLocation": "登录地点",
+    "browser": "浏览器类型",
+    "os": "操作系统",
+    "loginTime": "登录时间"
+  }
+}

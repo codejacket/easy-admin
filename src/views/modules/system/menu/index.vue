@@ -1,379 +1,454 @@
-<template>
-  <div class="app-card m20">
-    <!-- 查询条件 -->
-    <query-form v-model="query.form" :show="query.show" @search="getList">
-      <el-form-item label="菜单类型" prop="type">
-        <el-select v-model="query.form.type" placeholder="请选择菜单类型" clearable>
-          <el-option label="目录" value="catalog" />
-          <el-option label="菜单" value="menu" />
-          <el-option label="内嵌" value="iframe" />
-          <el-option label="外链" value="link" />
-          <el-option label="按钮" value="button" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="菜单名称" prop="title">
-        <el-input v-model="query.form.title" placeholder="请输入菜单名称" clearable @keyup.enter="getList" />
-      </el-form-item>
-      <el-form-item label="路由名称" prop="path">
-        <el-input v-model="query.form.path" placeholder="请输入路由名称" clearable @keyup.enter="getList" />
-      </el-form-item>
-    </query-form>
+<script name="Menu" setup>
+import IconPicker from '@/components/IconPicker'
+import { arrayToTree, reduceTree } from '@/utils/tree'
+import { isExternal } from '@/utils/validate'
+import { addMenu, delMenu, getMenu, listMenu, moveMenu, updateMenu } from '@api/system/menu'
+import dict from '@plugins/dict'
+import modal from '@plugins/modal'
+import { isNil } from 'lodash-es'
+import { useI18n } from 'vue-i18n'
+import AuthDialog from './components/AuthDialog'
+import QueryEditer from './components/QueryEditer'
 
-    <div class="flex-column g14 p14">
-      <div class="flex">
-        <easy-button type="primary" i="plus" t="common.add" size="small" plain @click="handleAdd()" />
-        <easy-button type="danger" i="delete" t="common.delete" size="small" plain @click="handleDelete(table.selections)" />
-        <easy-button type="info" i="sort" :t="table.expandRowKeys.length ? '折叠' : '展开'" size="small" plain @click="toggleExpandAll" />
-        <table-toolbar v-model:show-search="query.show" v-model:columns="table.columns" @refresh="getList" />
-      </div>
-      <!-- 菜单表格 -->
-      <easy-table v-loading="table.loading" :data="table.tree" :drag-options="table.dragOptions"
-        row-key="id" v-model:expand-row-keys="table.expandRowKeys"
-        v-model:columns="table.columns"
-        @selection-change="handleSelect">
-        <el-table-column type="selection" width="40" />
-        <el-table-column prop="title" label="菜单标题" width="200" align="left">
+const { t } = useI18n()
+const noParams = ref(true)
+const options = dict.all(['status', 'menu_type'])
+const catalog = ref([])
+const tablePro = useTemplateRef('tablePro')
+const formType = ref('catalog')
+const menuTypeMap = {
+  'menu': 'primary',
+  'catalog': 'info',
+  'link': 'warning',
+  'iframe': 'success',
+}
+
+const config = reactive({
+  api: {
+    async list(params) {
+      const { data } = await listMenu({ ...params, pageSize: 10000 })
+      noParams.value = Object.values(params.query).every(val => isNil(val) || val === '')
+      return {
+        data: {
+          list: noParams.value ? arrayToTree(data.list) : data.list,
+          total: noParams.value ? 0 : data.total,
+        },
+      }
+    },
+    get: getMenu,
+    add: addMenu,
+    update: updateMenu,
+    del: delMenu,
+  },
+  query: {
+    data: {
+      title: '',
+      path: '',
+    },
+  },
+  pagination: {
+    hideOnSinglePage: true,
+  },
+  table: {
+    // 展开的行
+    expandRowKeys: [],
+    // 拖拽选项
+    dragOptions: {
+      animation: 150,
+      handle: '.handle-drag',
+      disabled: false,
+      onEnd,
+    },
+  },
+  dialog: {
+    height: [0, 600],
+    closed() {
+      formType.value = 'catalog'
+    },
+    async openedDialog(row) {
+      const { data } = await listMenu({
+        pageSize: 10000,
+        currentPage: 1,
+      })
+      catalog.value = [
+        {
+          id: 0,
+          title: '根目录',
+          hasChild: true,
+          children: arrayToTree(data.list),
+        },
+      ]
+      tablePro.value.form.data.parentId = row ? row.id : 0
+      formType.value = getType(row ?? {})
+    },
+  },
+  form: {
+    data: {
+      id: undefined,
+      parentId: 0,
+      hasChild: false,
+      path: '',
+      component: '',
+      transition: '',
+      order: 0,
+      query: null,
+      icon: '',
+      title: '',
+      affixTab: false,
+      noCache: false,
+      hidden: false,
+      status: false,
+    },
+    // 表单校验
+    rules: {
+      title: [{ required: true, message: t('rules.title'), trigger: 'blur' }],
+      path: [{ required: true, message: t('rules.path'), trigger: 'blur' }],
+      component: [{ required: true, message: t('rules.component'), trigger: 'blur' }],
+    },
+  },
+})
+
+const authDialog = reactive({
+  open: false,
+  data: {},
+})
+
+async function onEnd({ oldIndex, newIndex }) {
+  if (oldIndex === newIndex) return
+  let oldNode, oldRelativeIndex, oldNodeParent, newRelativeIndex, newNodeParent
+
+  reduceTree(
+    tablePro.value.table.data,
+    (acc, node, index, parentNode) => {
+      if (acc.index === oldIndex) {
+        oldNode = node
+        oldRelativeIndex = index
+        oldNodeParent = parentNode
+      } else if (acc.index === newIndex) {
+        newRelativeIndex = index
+        newNodeParent = parentNode
+      }
+      acc.index++
+    },
+    { index: 0 },
+  )
+
+  let oldNodeDescendants = [oldNode.id]
+  if (oldNode.children) {
+    reduceTree(oldNode.children, (acc, node) => oldNodeDescendants.push(node.id))
+  }
+  if (oldNodeDescendants.includes(newNodeParent.id)) {
+    modal.message.error('父级不能拖拽到自己的子级中')
+  } else {
+    oldNode = oldNodeParent.splice(oldRelativeIndex, 1)[0]
+    let index = newRelativeIndex
+    if (oldIndex < newIndex && oldNodeParent.id !== newNodeParent.id) index++
+    newNodeParent.splice(index, 0, oldNode)
+    let target =
+      oldNodeParent.id === newNodeParent.id
+        ? '同层级'
+        : newParentNode.title
+          ? `【${newParentNode.title}】子目录中`
+          : '根目录中'
+
+    try {
+      await modal.confirm.warning(
+        `确定将【${oldNode.title}】移动到${target}的第 ${index + 1} 个位置吗？`,
+      )
+      await moveMenu(oldNode.id, newNodeParent.id, index + 1)
+    } catch {
+      tablePro.value.getList()
+    }
+  }
+}
+
+// 展开/折叠 按钮操作
+function toggleExpandAll(table) {
+  if (table.expandRowKeys.length) {
+    // 折叠全部
+    table.expandRowKeys = []
+  } else {
+    // 展开全部
+    reduceTree(table.data, (acc, node) => {
+      if (node.children) {
+        table.expandRowKeys.push(`${node.id}`)
+      }
+    })
+  }
+}
+
+function getType(menu) {
+  if (menu.hasChild) {
+    return 'catalog'
+  } else if (isExternal(menu.path)) {
+    return 'link'
+  } else if (isExternal(menu.component)) {
+    return 'iframe'
+  } else {
+    return 'menu'
+  }
+}
+
+function includes(...types) {
+  return types.includes(formType.value)
+}
+
+function openAuthDialog(row) {
+  authDialog.open = true
+  authDialog.data = row
+}
+
+watch(formType, val => {
+  tablePro.value.form.data.hasChild = val === 'catalog'
+})
+</script>
+
+<template>
+  <div class="m20px app-card">
+    <easy-table-pro :config="config" ref="tablePro">
+      <template #query="{ query, getList }">
+        <el-form-item label="菜单名称" prop="title">
+          <el-input
+            v-model="query.data.title"
+            placeholder="请输入菜单名称"
+            clearable
+            @keyup.enter="getList"
+          />
+        </el-form-item>
+        <el-form-item label="路由名称" prop="path">
+          <el-input
+            v-model="query.data.path"
+            placeholder="请输入路由名称"
+            clearable
+            @keyup.enter="getList"
+          />
+        </el-form-item>
+      </template>
+      <template #toolbar="{ query, table, getList, openDialog, deleteItems }">
+        <easy-button
+          type="primary"
+          i="plus"
+          t="common.add"
+          size="small"
+          plain
+          @click="openDialog"
+        />
+        <easy-button
+          type="danger"
+          i="delete"
+          t="common.delete"
+          size="small"
+          plain
+          @click="deleteItems(table.selections)"
+        />
+        <easy-button
+          :t="table.expandRowKeys.length ? 'common.collapse' : 'common.expand'"
+          type="info"
+          i="sort"
+          size="small"
+          plain
+          @click="toggleExpandAll(table)"
+        />
+        <table-toolbar
+          v-model:show-search="query.show"
+          v-model:columns="table.columns"
+          :refresh="getList"
+        />
+      </template>
+      <template #table="{ openDialog, deleteItems }">
+        <el-table-column width="40" type="selection" />
+        <el-table-column width="200" prop="title" label="菜单标题" align="left">
           <template #default="{ row }">
-            <svg-icon :icon="row.icon" style="margin-right: 8px" />
-            <span :style="{ opacity: row.type === 'button' ? 0.6 : 1 }">{{ row.title }}</span>
+            <svg-icon class="mr8px" :icon="row.icon" />
+            <span>{{ row.title }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="type" label="菜单类型" align="center" width="80">
-          <template #default="{ row: { type } }">
-            <el-tag v-if="type === 'catalog'" type="primary">目录</el-tag>
-            <el-tag v-else-if="type === 'menu'" type="info">菜单</el-tag>
-            <el-tag v-else-if="type === 'iframe'" type="success">内嵌</el-tag>
-            <el-tag v-else-if="type === 'link'" type="warning">外链</el-tag>
-            <el-tag v-else type="info" color="transparent">按钮</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="order" label="排序" width="80" hidden />
-        <el-table-column prop="path" label="路由名称" width="160" />
-        <el-table-column prop="component" label="组件路径" align="left" />
-        <el-table-column prop="auth" label="权限标识" width="160" hidden />
-        <el-table-column prop="status" label="状态" width="80">
-          <template #default="{ row: { disabled } }">
-            <el-tag :type="disabled ? 'danger' : 'success'">
-              {{ disabled ? '停用' : '正常' }}
+        <el-table-column width="80" label="菜单类型">
+          <template #default="{ row }">
+            <el-tag :type="menuTypeMap[getType(row)]">
+              {{ options['menu_type'].find?.(item => item.value === getType(row))?.label }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createBy" label="创建者" width="160" hidden />
-        <el-table-column prop="createTime" label="创建时间" :formatter="row => $parseTime(row.createTime)" width="180" hidden />
-        <el-table-column prop="updateBy" label="更新者" width="160" hidden />
-        <el-table-column prop="updateTime" label="更新时间" :formatter="row => $parseTime(row.updateTime)" width="180" hidden />
-        <el-table-column prop="remark" label="备注" hidden />
-        <el-table-column :label="$t('common.operation')" width="240" fixed="right">
+        <el-table-column width="80" hidden prop="order" label="排序" />
+        <el-table-column width="160" prop="path" label="路由名称" />
+        <el-table-column prop="component" label="组件路径" align="left" />
+        <el-table-column width="100" label="权限">
           <template #default="{ row }">
-            <easy-button type="primary" i="drag" class="handle-drag" :title="$t('common.drag')" v-if="query.noParams" link />
-            <easy-button type="primary" i="plus" t="common.add" link @click="handleAdd(row)" />
-            <easy-button type="primary" i="edit" t="common.update" link @click="handleUpdate(row)" />
-            <easy-button type="primary" i="delete" t="common.delete" link @click="handleDelete([row])" />
+            <easy-button v-if="getType(row) === 'menu'" size="small" @click="openAuthDialog(row)">
+              查看权限
+            </easy-button>
           </template>
         </el-table-column>
-      </easy-table>
-    </div>
-    <!-- 添加或修改菜单对话框 -->
-    <easy-dialog v-model="dialog.open" :loading="dialog.loading" :title="`${dialog.isEdit? '修改' : '添加'}菜单`" width="680px" 
-      :confirm="submitForm" @closed="$refs['form']?.resetFields?.()">
-      <easy-form ref="form" v-model="dialog.form" :rules="dialog.rules">
-        <el-form-item label="菜单类型" prop="type">
-          <el-radio-group v-model="dialog.form.type">
-            <el-radio-button value="catalog">目录</el-radio-button>
-            <el-radio-button value="menu">菜单</el-radio-button>
-            <el-radio-button value="iframe">内嵌</el-radio-button>
-            <el-radio-button value="link">外链</el-radio-button>
-            <el-radio-button value="button">按钮</el-radio-button>
+        <el-table-column width="100" prop="status" label="状态">
+          <template #default="{ row }">
+            <el-tag :type="['success', 'danger'][row.status]">
+              {{ options['status'].find?.(option => `${option.value}` === `${row.status}`)?.label }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column width="160" hidden prop="createBy" label="创建者" />
+        <el-table-column
+          width="180"
+          hidden
+          :formatter="row => $parseTime(row.createTime)"
+          prop="createTime"
+          label="创建时间"
+        />
+        <el-table-column width="160" hidden prop="updateBy" label="更新者" />
+        <el-table-column
+          width="180"
+          hidden
+          :formatter="row => $parseTime(row.updateTime)"
+          prop="updateTime"
+          label="更新时间"
+        />
+        <el-table-column hidden prop="remark" label="备注" />
+        <el-table-column width="270" :label="$t('common.operation')" fixed="right">
+          <template #default="{ row }">
+            <easy-button
+              class="handle-drag"
+              v-if="noParams"
+              :title="$t('common.drag')"
+              type="primary"
+              i="drag"
+              link
+            />
+            <easy-button
+              :disabled="!row.hasChild"
+              type="primary"
+              i="plus"
+              t="common.add"
+              link
+              @click="openDialog()"
+            />
+            <easy-button type="primary" i="edit" t="common.update" link @click="openDialog(row)" />
+            <easy-button
+              type="primary"
+              i="delete"
+              t="common.delete"
+              link
+              @click="deleteItems(row)"
+            />
+          </template>
+        </el-table-column>
+      </template>
+      <template #form="{ form }">
+        <el-form-item label="菜单类型">
+          <el-radio-group v-model="formType">
+            <el-radio-button
+              v-for="{ value, label } in options['menu_type']"
+              :key="value"
+              :label="label"
+              :value="value"
+            />
           </el-radio-group>
         </el-form-item>
         <el-form-item label="上级目录" prop="parentId">
-          <el-tree-select v-model="dialog.form.parentId" :data="dialog.catalog" placeholder="选择上级目录"
+          <el-tree-select
+            v-model="form.data.parentId"
+            :data="catalog"
             :props="{ value: 'id', label: 'title', class: () => 'el-tree-select-node' }"
-            :filter-node-method="(val, node) => node.type !== 'button'" check-strictly filterable
-            highlight-current>
+            placeholder="选择上级目录"
+            check-strictly
+            filterable
+            highlight-current
+          >
             <template #default="{ data }">
               {{ data.title }}
-              <span v-if="data.hasChild" style="opacity: 0.5">
-                ({{ data.children?.length }})
-              </span>
+              <span class="opacity-50" v-if="data.hasChild"> ({{ data.children?.length }}) </span>
             </template>
           </el-tree-select>
         </el-form-item>
         <el-form-item label="菜单名称" prop="title">
-          <el-input v-model="dialog.form.title" placeholder="请输入菜单名称" />
+          <el-input v-model="form.data.title" placeholder="请输入菜单名称" />
         </el-form-item>
         <el-form-item label="菜单图标" prop="icon">
-          <IconSelect v-model="dialog.form.icon" />
+          <IconPicker v-model="form.data.icon" />
         </el-form-item>
-        <el-form-item label="路由名称" prop="path" v-if="dialog.form.type !== 'button'">
-          <el-input v-model="dialog.form.path" placeholder="请输入路由名称" />
+        <el-form-item label="路由名称" prop="path">
+          <el-input v-model="form.data.path" placeholder="请输入路由名称" />
         </el-form-item>
-        <el-form-item label="组件路径" prop="component" v-if="dialog.form.type !== 'button'">
-          <el-input v-model="dialog.form.component" placeholder="请输入组件路径" />
+        <el-form-item label="路由参数" prop="query">
+          <QueryEditer v-model="form.data.query" />
         </el-form-item>
-        <el-form-item label="权限标识" prop="auth" v-if="dialog.form.type === 'button'">
-          <el-input v-model="dialog.form.auth" placeholder="请输入权限标识" />
+        <el-form-item v-if="includes('menu', 'iframe')" label="组件路径" prop="component">
+          <el-input v-model="form.data.component" placeholder="请输入组件路径" />
         </el-form-item>
-        <div style="display:flex;flex-wrap:wrap">
-          <el-form-item label="页面动画" prop="transition" style="width: 50%" v-if="['menu', 'iframe'].includes(dialog.form.type)">
-            <el-select v-model="dialog.form.transition" placeholder="请选择页面动画" style="width:160px">
-              <el-option v-for="(val, key) in $tm('settings.system.children.pageAnimateType.options')" :key="key" :label="val"
-                :value="key" />
+        <div class="flex flex-wrap">
+          <el-form-item class="w-50%" label="页面动画" prop="transition">
+            <el-select class="w-160px" v-model="form.data.transition" placeholder="请选择页面动画">
+              <el-option
+                v-for="(val, key) in $tm('settings.system.children.pageAnimateType.options')"
+                :key="key"
+                :label="val"
+                :value="key"
+              />
             </el-select>
           </el-form-item>
-          <el-form-item label="排序" prop="order" style="width: 50%">
-            <el-input-number v-model="dialog.form.order" :min="1" />
+          <el-form-item class="w-50%" label="排序" prop="order">
+            <el-input-number v-model="form.data.order" :min="1" />
           </el-form-item>
-          <el-form-item prop="noCache" style="width: 50%" v-if="['menu', 'iframe'].includes(dialog.form.type)">
+          <el-form-item class="w-50%" v-if="includes('menu', 'iframe')" prop="affixTab">
+            <template #label>固定标签</template>
+            <el-radio-group v-model="form.data.affixTab">
+              <el-radio :value="true">固定</el-radio>
+              <el-radio :value="false">不固定</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item class="w-50%" v-if="includes('menu', 'iframe')" prop="noCache">
             <template #label>
-              <el-tooltip content="选择是则会被`keep-alive`缓存，需要匹配组件的`name`和地址保持一致" placement="top" :show-after="300">
-                是否缓存
+              <el-tooltip
+                :show-after="300"
+                content="选择是则会被`keep-alive`缓存，需要匹配组件的`name`和地址保持一致"
+                placement="top"
+              >
+                缓存路由
               </el-tooltip>
             </template>
-            <el-radio-group v-model="dialog.form.noCache" style="margin-left: 10px">
+            <el-radio-group v-model="form.data.noCache">
               <el-radio :value="true">缓存</el-radio>
               <el-radio :value="false">不缓存</el-radio>
             </el-radio-group>
           </el-form-item>
-          <el-form-item prop="hidden" style="width: 50%" v-if="dialog.form.type !== 'button'">
+          <el-form-item class="w-50%" prop="hidden">
             <template #label>
-              <el-tooltip content="选择隐藏则路由将不会出现在侧边栏，但仍然可以访问" placement="top" :show-after="300">
+              <el-tooltip
+                :show-after="300"
+                content="选择隐藏则路由将不会出现在侧边栏，但仍然可以访问"
+                placement="top"
+              >
                 是否隐藏
               </el-tooltip>
             </template>
-            <el-radio-group v-model="dialog.form.hidden" style="margin-left: 10px">
+            <el-radio-group v-model="form.data.hidden">
               <el-radio :value="true">隐藏</el-radio>
               <el-radio :value="false">不隐藏</el-radio>
             </el-radio-group>
           </el-form-item>
-          <el-form-item prop="disabled" style="width: 50%">
+          <el-form-item class="w-50%" prop="status">
             <template #label>
-              <el-tooltip content="选择停用则路由将不会出现在侧边栏，也不能被访问" placement="top" :show-after="300">
+              <el-tooltip
+                :show-after="300"
+                content="选择停用则路由将不会出现在侧边栏，也不能被访问"
+                placement="top"
+              >
                 菜单状态
               </el-tooltip>
             </template>
-            <el-radio-group v-model="dialog.form.disabled" style="margin-left: 10px">
+            <el-radio-group v-model="form.data.status">
               <el-radio :value="false">正常</el-radio>
               <el-radio :value="true">停用</el-radio>
             </el-radio-group>
           </el-form-item>
         </div>
-      </easy-form>
-    </easy-dialog>
+      </template>
+    </easy-table-pro>
+    <AuthDialog v-model="authDialog.open" :data="authDialog.data" />
   </div>
 </template>
 
-<i18n locale="en" src="./locales/en.json"></i18n>
-<i18n locale="zh" src="./locales/zh.json"></i18n>
-
-<script>
-import { list, get, add, del, update, move } from '@api/system/menu'
-import { arrayToTree } from '@/utils/tree'
-
-import IconSelect from '@/components/IconSelect'
-
-export default {
-  name: 'Menu',
-  components: { IconSelect },
-  data() {
-    return {
-      // 搜索栏
-      query: {
-        show: true,
-        noParams: true,
-        form: {
-          title: '',
-          path: '',
-          type: ''
-        }
-      },
-      // 表格
-      table: {
-        // 遮罩层
-        loading: true,
-        // 列设置
-        columns: [],
-        // 展开的行
-        expandRowKeys: [],
-        // 选中的数据
-        selections: [],
-        // 菜单树
-        tree: [],
-        // 拖拽选项
-        dragOptions: {
-          animation: 150,
-          handle: '.handle-drag',
-          disabled: false,
-          onEnd: this.onEnd
-        }
-      },
-      // 弹窗
-      dialog: {
-        // 是否显示弹出层
-        open: false,
-        // 是否弹窗加载中
-        loading: false,
-        // 是否为编辑
-        isEdit: false,
-        // 目录树
-        catalog: [],
-        // 表单参数
-        form: {
-          id: undefined,
-          parentId: 0,
-          hasChild: false,
-          path: '',
-          component: '',
-          auth: '',
-          transition: '',
-          type: 'catalog',
-          order: 0,
-          query: null,
-          icon: '',
-          title: '',
-          noCache: false,
-          hidden: false,
-          disabled: false
-        },
-        // 表单校验
-        rules: {
-          title: [{ required: true, message: "菜单名称不能为空", trigger: "blur" }],
-          path: [{ required: true, message: "路由地址不能为空", trigger: "blur" }]
-        }
-      },
-    }
-  },
-  created() {
-    this.getList()
-  },
-  methods: {
-    /** 查询菜单树 */
-    async getList() {
-      this.table.loading = true
-      const { data } = await list(this.query.form)
-      // 搜索条件有值时，则 this.table.tree = res.data
-      this.query.noParams = Object.values(this.query.form).every(val => val === '' || val === null || val === undefined)
-      this.table.tree = this.query.noParams ? arrayToTree(data.list) : data.list
-      this.table.loading = false
-    },
-    /** 拖拽按钮操作 */
-    async onEnd({ oldIndex, newIndex }) {
-      if (oldIndex === newIndex) return
-      let oldNodeIndex, oldParentNode, oldNode
-      let newNodeIndex, newParentNode
-      this.traverse(this.table.tree, (node, index, parentNode) => {
-        if (index === oldIndex) {
-          oldNode = node
-          oldParentNode = parentNode
-          oldNodeIndex = this.getChildren(oldParentNode).findIndex(item => item.id === node.id)
-        } else if (index === newIndex) {
-          newParentNode = parentNode
-          newNodeIndex = this.getChildren(newParentNode).findIndex(item => item.id === node.id)
-        }
-      })
-      let oldNodeChildren = [oldNode.id]
-      if (oldNode.children) this.traverse(oldNode, (node) => oldNodeChildren.push(node.id))
-      if (oldNodeChildren.includes(newParentNode.id)) {
-        this.$modal.message.error('父级不能拖拽到自己的子级中')
-      } else if (oldNode.type === 'button' && newParentNode.type !== 'menu') {
-        this.$modal.message.error('按钮只能放在菜单中')
-      } else {
-        oldNode = this.getChildren(oldParentNode).splice(oldNodeIndex, 1)[0]
-        let index = newNodeIndex + Number(oldIndex < newIndex && oldParentNode.id !== newParentNode.id)
-        this.getChildren(newParentNode).splice(index, 0, oldNode)
-        let sameLevel = oldParentNode.id === newParentNode.id
-        let target = sameLevel ? '同层级' : newParentNode.title ? `【${newParentNode.title}】子目录中` : '根目录中'
-        try {
-          await this.$modal.confirm.warning(`确定将【${oldNode.title}】移动到${target}的第 ${index + 1} 个位置吗？`)
-          await move(oldNode.id, newParentNode.id, index + 1)
-        } catch {
-          this.getList()
-        }
-      }
-    },
-    traverse(tree, func) {
-      let index = 0
-      let traverse = (tree, func) => {
-        for (let node of this.getChildren(tree) || []) {
-          func(node, index++, tree)
-          if (node.children) {
-            traverse(node, func)
-          }
-        }
-      }
-      traverse(tree, func)
-    },
-    getChildren(parent) {
-      return Array.isArray(parent) ? parent : parent.children
-    },
-    handleSelect(selections) {
-      this.table.selections = selections
-    },
-    // 展开/折叠 按钮操作
-    toggleExpandAll() {
-      if (this.table.expandRowKeys.length) {
-        // 折叠全部
-        this.table.expandRowKeys = []
-      } else {
-        // 展开全部
-        this.traverse(this.table.tree, (node) => {
-          if (node.children) {
-            this.table.expandRowKeys.push(`${node.id}`)
-          }
-        })
-      }
-    },
-    // 新增按钮操作
-    async handleAdd(row) {
-      if (!row || row.type !== 'button') {
-        this.dialog.loading = true
-        this.dialog.isEdit = false
-        this.dialog.open = true
-        this.$refs['form']?.resetFields()
-        const { data } = await list()
-        this.dialog.catalog = [{ id: 0, title: '根目录', hasChild: true, children: arrayToTree(data.list) }]
-        this.dialog.form.type = 'catalog'
-        this.dialog.form.parentId = row ? row.id : 0
-        this.dialog.loading = false
-      } else {
-        this.$modal.message.error('按钮不允许创建子菜单')
-      }
-    },
-    /** 修改按钮操作 */
-    async handleUpdate(row) {
-      this.dialog.loading = true
-      this.dialog.isEdit = true
-      this.dialog.open = true
-      const res = await list()
-      this.dialog.catalog = [{ id: 0, title: '根目录', hasChild: true, children: arrayToTree(res.data.list) }]
-      const { data } = await get(row.id)
-      this.dialog.form = data
-      this.dialog.loading = false
-    },
-    /** 删除按钮操作 */
-    async handleDelete(rows) {
-      if (rows.length === 0) return
-      try {
-        await this.$modal.confirm.warning(`是否确认删除"${rows.map(({ title }) => title)}"?`)
-        await del(rows.map(({ id }) => id))
-        await this.getList()
-        this.$modal.message.success(this.$t('message.deleteSuccess'))
-      } catch {}
-    },
-    // 提交按钮
-    submitForm() {
-      this.$refs["form"].validate(async valid => {
-        if (valid) {
-          let action = this.dialog.isEdit ? 'update' : 'add'
-          let method = this.dialog.isEdit? update : add
-          await method(this.dialog.form)
-          this.$modal.message.success(this.$t(`message.${action}Success`))
-          this.getList()
-        }
-      })
-    }
-  }
-}
-</script>
+<i18n src="./locales/en.json" locale="en" />
+<i18n src="./locales/zh-CN.json" locale="zh-CN" />
 
 <style lang="scss" scoped></style>

@@ -1,0 +1,25 @@
+@use 'sass:map';
+@use 'sass:list';
+
+$breakpoint: (
+  'phone': (
+    320px,
+    480px,
+  ),
+  'pad': (
+    481px,
+    768px,
+  ),
+  'desktop': (
+    769px,
+    9999px,
+  ),
+);
+
+@mixin respond-to($name) {
+  $bp: map.get($breakpoint, $name);
+
+  @media (min-width: list.nth($bp, 1)) and (max-width: list.nth($bp, 2)) {
+    @content;
+  }
+}

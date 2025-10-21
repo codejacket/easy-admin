@@ -1,214 +1,227 @@
+<script name="Login" setup>
+import { getCaptcha, verifyCaptcha } from '@/api/login'
+import Captcha from '@/components/Captcha'
+import Copyright from '@/components/Copyright'
+import SystemLogo from '@/components/SystemLogo'
+import LangSelect from '@/layout/components/Navbar/Toolbar/LangSelect'
+import ModeSwitch from '@/layout/components/Navbar/Toolbar/ModeSwitch'
+import { decrypt, encrypt } from '@/utils/jsencrypt'
+import { useUserStore } from '@store/user'
+import cookies from 'js-cookie'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+
+const { t } = useI18n()
+
+const form = reactive({
+  username: cookies.get('username') || '',
+  password: decrypt(cookies.get('password')) || '',
+  rememberMe: Boolean(cookies.get('rememberMe')),
+})
+
+const rules = computed(() => {
+  return {
+    username: [{ required: true, trigger: 'blur', message: t('rules.account') }],
+    password: [{ required: true, trigger: 'blur', message: t('rules.password') }],
+  }
+})
+
+const loading = ref(false)
+const loginForm = useTemplateRef('loginForm')
+
+const router = useRouter()
+const route = useRoute()
+const userStore = useUserStore()
+
+const captchaRef = useTemplateRef('captchaRef')
+let isFirstCaptcha = true
+const firstCaptchaData = ref(null)
+
+getCaptcha().then(res => {
+  firstCaptchaData.value = res.data
+})
+
+async function validate() {
+  try {
+    if (firstCaptchaData.value.type) {
+      await loginForm.value.validate()
+      captchaRef.value.test()
+    } else {
+      await handleLogin()
+    }
+  } catch {}
+}
+
+async function handleLogin() {
+  if (form.rememberMe) {
+    cookies.set('username', form.username, { expires: 30 })
+    cookies.set('password', encrypt(form.password), { expires: 30 })
+    cookies.set('rememberMe', form.rememberMe, { expires: 30 })
+  } else {
+    cookies.remove('username')
+    cookies.remove('password')
+    cookies.remove('rememberMe')
+  }
+  try {
+    loading.value = true
+    await userStore.login(form)
+    loading.value = false
+    router.push({ path: route.query?.redirect || '/' })
+  } catch {
+    loading.value = false
+  }
+}
+
+async function getData() {
+  if (isFirstCaptcha) {
+    isFirstCaptcha = false
+    return firstCaptchaData.value
+  } else {
+    const { data } = await getCaptcha()
+    return data
+  }
+}
+</script>
+
 <template>
-  <div class="login">
-    <el-form class="login-form" ref="loginForm" :model="loginForm" :rules="loginRules">
-      <SystemLogo class="logo-container" color="var(--el-text-color-regular)">
-        <svg-icon icon="logo" />
-      </SystemLogo>
+  <div class="login-page">
+    <el-form class="login-form" :model="form" :rules="rules" ref="loginForm">
+      <SystemLogo class="logo-container" color="var(--el-text-color-regular)" />
       <el-form-item prop="username">
-        <el-input v-model="loginForm.username" type="text" auto-complete="off" :placeholder="$t('account')">
+        <el-input
+          v-model="form.username"
+          :placeholder="t('account')"
+          type="text"
+          auto-complete="off"
+        >
           <template #prefix>
             <svg-icon icon="user" />
           </template>
         </el-input>
       </el-form-item>
       <el-form-item prop="password">
-        <el-input v-model="loginForm.password" type="password" auto-complete="off" :placeholder="$t('password')">
+        <el-input
+          v-model="form.password"
+          :placeholder="t('password')"
+          show-password
+          type="password"
+          auto-complete="off"
+          @keyup.enter="validate"
+        >
           <template #prefix>
             <svg-icon icon="lock" />
           </template>
         </el-input>
       </el-form-item>
-      <el-form-item v-if="captcha">
-        <captcha ref="captchaRef" type="pick" @success="handleLogin" />
+      <el-form-item v-if="firstCaptchaData?.type">
+        <Captcha
+          :get-data="getData"
+          :verify="verifyCaptcha"
+          :type="firstCaptchaData?.type"
+          ref="captchaRef"
+          @success="handleLogin"
+        />
       </el-form-item>
-      <div class="box">
-        <el-checkbox v-model="loginForm.rememberMe">
-          {{ $t('remember') }}
+      <div class="mb-25px flex justify-between items-center">
+        <el-checkbox v-model="form.rememberMe">
+          {{ t('remember') }}
         </el-checkbox>
-        <router-link v-if="register" class="el-link el-link--info is-underline" :to="'/register'">
-          {{ $t('register') }}
+        <router-link class="el-link el-link--info is-underline" to="/register">
+          {{ t('register') }}
         </router-link>
       </div>
-      <easy-button style="width:100%" type="primary" :t="loading ? 'logging' : 'login'" :loading="loading" auto-insert-space 
-        @click.native.prevent="validate" />
+      <easy-button
+        class="w-100%"
+        :loading="loading"
+        type="primary"
+        auto-insert-space
+        @click.native.prevent="validate"
+      >
+        {{ t(loading ? 'logging' : 'login') }}
+      </easy-button>
     </el-form>
     <div class="login-tools">
+      <ModeSwitch />
       <LangSelect />
     </div>
     <Copyright class="copyright" />
   </div>
 </template>
 
-<i18n locale="en" src="./locales/en.json"></i18n>
-<i18n locale="zh" src="./locales/zh.json"></i18n>
-
-<script>
-import Cookies from "js-cookie"
-import { encrypt, decrypt } from '@/utils/jsencrypt'
-import { useAppStore } from '@store/app'
-import { useUserStore } from '@store/user'
-import { mapState } from 'pinia'
-
-import SystemLogo from '@/components/SystemLogo'
-import Copyright from '@/components/Copyright'
-import Captcha from '@/components/Captcha'
-import LangSelect from '@/components/LangSelect'
-
-export default {
-  name: 'Login',
-  components: { SystemLogo, Copyright, Captcha, LangSelect },
-  data() {
-    return {
-      img: "",
-      uuid: "",
-      loginForm: {
-        username: "",
-        password: "",
-        rememberMe: false,
-      },
-      loginRules: {
-        username: [{ required: true, trigger: "blur", message: this.$t('rules.account') }],
-        password: [{ required: true, trigger: "blur", message: this.$t('rules.password') }]
-      },
-      loading: false,
-      // 验证码开关
-      captcha: true,
-      // 注册开关
-      register: true
-    }
-  },
-  created() {
-    this.getCookie()
-  },
-  computed: {
-    ...mapState(useAppStore, ['title']),
-    ...mapState(useUserStore, ['name', 'nickname'])
-  },
-  methods: {
-    getCookie() {
-      let username = Cookies.get("username")
-      let password = Cookies.get("password")
-      let rememberMe = Cookies.get('rememberMe')
-      this.loginForm = {
-        username: username ?? this.loginForm.username,
-        password: password === undefined ? this.loginForm.password : decrypt(password),
-        rememberMe: Boolean(rememberMe)
-      }
-    },
-    validate() {
-      this.$refs?.loginForm.validate(valid => {
-        if (valid) {
-          if (this.$refs.captchaRef) {
-            this.$refs?.captchaRef?.open()
-          } else {
-            this.handleLogin()
-          }
-        }
-      })
-    },
-    async handleLogin() {
-      if (this.loginForm.rememberMe) {
-        Cookies.set("username", this.loginForm.username, { expires: 30 })
-        Cookies.set("password", encrypt(this.loginForm.password), { expires: 30 })
-        Cookies.set('rememberMe', this.loginForm.rememberMe, { expires: 30 })
-      } else {
-        Cookies.remove("username")
-        Cookies.remove("password")
-        Cookies.remove('rememberMe')
-      }
-      try {
-        this.loading = true
-        await useUserStore().login(this.loginForm)
-        this.loading = false
-        let loginSuccess = this.$t('message.loginSuccess')
-        let welcomeBack = this.$t('message.welcomeBack')
-        await this.$router.push({ path: this.$route.query?.redirect || "/" })
-        this.$notify.success({ title: loginSuccess, message: `${welcomeBack}, ${this.nickname || this.name} !` })
-      } catch (error) {
-        this.loading = false
-        this.$refs?.captchaRef?.open?.()
-      }
-    }
-  }
-}
-</script>
+<i18n src="./locales/en.json" locale="en" />
+<i18n src="./locales/zh-CN.json" locale="zh-CN" />
 
 <style lang="scss" scoped>
-.login {
+.login-page {
   width: 100vw;
   height: 100vh;
-  position: relative;
+  background: radial-gradient(
+    65% 52% at 50% 55%,
+    hsl(var(--el-color-primary-h) 84% 58% / 40%) 0,
+    hsl(calc(var(--el-color-primary-h) + 10) 80% 50% / 30.2%) 50%,
+    #09090b00
+  );
+}
 
-  &::before {
-    content: '';
-    background-image: url("@/assets/img/login-background.jpg");
-    background-size: cover;
-    filter: hue-rotate(calc((var(--el-color-primary-h) - 214) * 1deg));
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
+.login-form {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  box-sizing: border-box;
+  height: auto;
+  padding: 25px;
+  cursor: default;
+  background: var(--el-bg-color);
+  border-radius: 6px;
+  box-shadow: var(--el-box-shadow-light);
+  transform: translate(-50%, -50%);
+
+  .logo-container {
+    margin-bottom: 25px;
+
+    :deep(svg) {
+      width: 32px;
+      height: 32px;
+    }
+
+    :deep(h1) {
+      font-size: 16px;
+    }
   }
 
-  .login-form {
+  @include respond-to('phone') {
+    width: 90%;
+  }
+
+  @include respond-to('pad') {
     width: 400px;
-    height: auto;
-    padding: 25px;
-    border-radius: 6px;
-    background: var(--el-bg-color);
-    box-shadow: var(--el-box-shadow-light);
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    cursor: default;
-
-    .logo-container {
-      margin-bottom: 25px;
-
-      :deep(svg) {
-        width: 32px;
-        height: 32px;
-      }
-
-      :deep(h1) {
-        width: 96px;
-        font-size: 15px;
-      }
-    }
-
-    .el-input {
-      height: 38px;
-
-      svg {
-        color: #a8abb2;
-      }
-    }
-
-    .box {
-      margin-bottom: 25px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
   }
 
-  .login-tools {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    position: absolute;
-    right: 30px;
-    top: 30px;
+  @include respond-to('desktop') {
+    width: 450px;
   }
+}
 
-  .copyright {
-    color: #999;
-    position: absolute;
-    left: 50%;
-    bottom: 16px;
-    transform: translateX(-50%);
+.login-tools {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 18px;
+  color: var(--el-text-color-regular);
+
+  div {
+    cursor: pointer;
   }
+}
+
+.copyright {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  color: #999;
+  transform: translateX(-50%);
 }
 </style>

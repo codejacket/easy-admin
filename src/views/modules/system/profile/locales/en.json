@@ -1,1 +1,5 @@
-{}
+{
+  "basicSettings": "Basic Settings",
+  "passwordSettings": "Password Settings",
+  "loginLog": "Login Log"
+}

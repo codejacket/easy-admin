@@ -1,128 +1,219 @@
-const { menuList } = require(`${process.cwd()}/mock/data`)
-const { getNextUniqueMin, pick } = require(`${process.cwd()}/mock/utils`)
+import { merge, omit, remove } from 'lodash-es'
+import { authList, menuList } from '../../data'
+import { eq, getNextId, getUser, parseTime, toPage } from '../../utils/index'
+import { error, success } from '../../utils/result'
 
-module.exports = [{
+export default [
+  {
     url: '/mock/system/menu',
     method: 'get',
-    response(req) {
-        let params = req.query
-        let data = menuList.filter(item => {
-            return Object.keys(params).every(key => {
-                return item[key]?.includes(params[key])
-            })
-        })
-        return {
-            code: 200,
-            msg: '操作成功',
-            data: {
-                list: data,
-                total: data.length
-            }
-        }
-    }
-}, {
+    response({ query }) {
+      return success(
+        toPage(menuList, query, {
+          title: 'like',
+          path: 'like',
+        }),
+      )
+    },
+  },
+  {
     url: '/mock/system/menu/:id',
     method: 'get',
-    response(req) {
-        let n = parseInt(req.params.id)
-        return {
-            code: 200,
-            msg: '操作成功',
-            data: menuList.find(item => item.id === n)
-        }
-    }
-}, {
+    response({ query }) {
+      return success(menuList.find(item => eq(item.id, query.id)))
+    },
+  },
+  {
     url: '/mock/system/menu',
     method: 'post',
-    response(req) {
-        let minId = getNextUniqueMin(menuList.map(item => item.id))
-        let form = { ...req.body, id: minId, createTime: new Date().getTime() }
-        let keys = ['id', 'parentId', 'order', 'hasChild', 'path', 'query', 'component', 'icon', 'title', 'noCache', 'hidden', 'disabled', 'createTime']
-        let item = pick(form, keys)
-        menuList.push(item)
-        return {
-            code: 200,
-            msg: '操作成功'
-        }
-    }
-}, {
-    url: '/mock/system/menu',
-    method: 'delete',
-    response(req) {
-        let parentIds = []
-        menuList.forEach((item, index) => {
-            if (req.body.includes(item.id)) {
-                parentIds.push(menuList.splice(index, 1)[0].parentId)
-            }
-        })
-        // 去重
-        parentIds = [...new Set(parentIds)]
-        parentIds.forEach(id => {
-            let childrenList = menuList.filter(item => item.parentId === id).sort((a, b) => a.order - b.order)
-            childrenList.forEach((item, index) => {
-                item.order = index + 1
-            })
-        })
-        return {
-            code: 200,
-            msg: '操作成功'
-        }
-    }
-}, {
+    response({ body, headers }) {
+      // 调整好的兄弟节点的顺序
+      let brotherMenus = menuList
+        .filter(item => eq(item.parentId, body.parentId))
+        .sort((a, b) => a.order - b.order)
+      let menu = {
+        status: 1,
+        order: brotherMenus.length + 1,
+      }
+      let updateData = {
+        id: getNextId(menuList),
+        createBy: getUser(headers).username,
+        createTime: parseTime(new Date()),
+      }
+      merge(menu, body, updateData)
+      brotherMenus.splice(Math.min(body.order - 1, brotherMenus.length), 0, menu)
+      adjustOrder(brotherMenus)
+      menuList.push(menu)
+      updateBatch(brotherMenus)
+      return success()
+    },
+  },
+  {
     url: '/mock/system/menu',
     method: 'put',
-    response(req) {
-        for (let i = 0; i < menuList.length; i++) {
-            if (menuList[i].id === req.body.id) {
-                menuList[i] = { ...menuList[i], ...req.body }
-                break
-            }
-        }
-        return {
-            code: 200,
-            msg: '操作成功'
-        }
-    }
-}, {
+    response({ body, headers }) {
+      let menu = menuList.find(item => eq(item.id, body.id))
+      let updateData = {
+        updateBy: getUser(headers).username,
+        updateTime: parseTime(new Date()),
+      }
+      merge(menu, omit(body, ['parentId']), updateData)
+      if (menu.parentId !== body.parentId || menu.order !== body.order) {
+        return move(body.id, body.parentId, body.order)
+      }
+      return success()
+    },
+  },
+  {
+    url: '/mock/system/menu',
+    method: 'delete',
+    response({ body }) {
+      let parentIds = [
+        ...new Set(
+          menuList
+            .filter(item => body.includes(item.id) && !body.includes(item.parentId))
+            .map(item => item.parentId),
+        ),
+      ]
+      let descendantIds = getDescendantIds(menuList, body)
+      let deleteIds = [...new Set([...body, ...descendantIds])]
+      remove(menuList, item => deleteIds.includes(item.id))
+      parentIds.forEach(parentId => {
+        let brotherMenus = menuList.filter(item => item.parentId === parentId)
+        adjustOrder(brotherMenus)
+        updateBatch(brotherMenus)
+      })
+      return success()
+    },
+  },
+  {
     url: '/mock/system/menu/move',
     method: 'get',
-    response(req) {
-        const { id, targetId, order } = req.params
-        // 获取 id节点 的所有后代节点的id
-        function getDescIds(menuList, parentId) {
-            let descIds = []
-            menuList.forEach(item => {
-                if (item.parentId === parentId) {
-                    descIds.push(item.id)
-                    descIds = descIds.concat(getDescIds(menuList, item.id))
-                }
-            })
-            return descIds
+    response({ query }) {
+      let { id, targetId, order } = query
+      return move(id, targetId, order)
+    },
+  },
+  {
+    url: '/mock/system/auth',
+    method: 'get',
+    response({ query }) {
+      return success(
+        toPage(authList, query, {
+          menuId: 'eq',
+        }),
+      )
+    },
+  },
+  {
+    url: '/mock/system/auth/:id',
+    method: 'get',
+    response({ query }) {
+      return success(authList.find(item => eq(item.id, query.id)))
+    },
+  },
+  {
+    url: '/mock/system/auth',
+    method: 'post',
+    response({ body, headers }) {
+      if (body.menuId) {
+        let auth = {
+          status: 0,
         }
-        let descIds = getDescIds(menuList, id)
-        if (descIds.concat(id).includes(targetId)) {
-            return {
-                code: 500,
-                msg: '父级不能拖拽到自己的子级中'
-            }
-        } else {
-            let item = menuList.splice(menuList.findIndex(item => item.id === id), 1)[0]
-            // 找到 item 所有的兄弟节点，然后重新排序
-            let itemBrothers = menuList.filter(item => item.parentId === item.parentId).sort((a, b) => a.order - b.order)
-            itemBrothers.forEach((item, index) => item.order = index + 1)
-            // 修改 item 的 上级菜单
-            item.parentId = targetId
-            // 找到 targetId 的所有子节点，并排序好，然后插入到它的子节点中
-            let targetChildrenList = menuList.filter(item => item.parentId === targetId).sort((a, b) => a.order - b.order)
-            targetChildrenList.splice(order - 1, 0, item)
-            // 插入子节点后，重新排序
-            targetChildrenList.forEach((item, index) => item.order = index + 1)
-            // 最后插入到 menuList 中
-            menuList.push(item)
-            return {
-                code: 200,
-                msg: '操作成功'
-            }
+        let updateData = {
+          id: getNextId(authList),
+          createBy: getUser(headers).username,
+          createTime: parseTime(new Date()),
         }
+        merge(auth, body, updateData)
+        authList.push(auth)
+        return success()
+      } else {
+        return error('请选择菜单')
+      }
+    },
+  },
+  {
+    url: '/mock/system/auth',
+    method: 'put',
+    response({ body, headers }) {
+      if (body.menuId) {
+        let auth = authList.find(item => eq(item.id, body.id))
+        let updateData = {
+          updateBy: getUser(headers).username,
+          updateTime: parseTime(new Date()),
+        }
+        merge(auth, body, updateData)
+        return success()
+      } else {
+        return error('请选择菜单')
+      }
+    },
+  },
+  {
+    url: '/mock/system/auth',
+    method: 'delete',
+    response({ body }) {
+      remove(authList, item => body.includes(item.id))
+      return success()
+    },
+  },
+]
+
+function adjustOrder(list) {
+  for (let i = 0; i < list.length; i++) {
+    list[i].order = i + 1
+  }
+}
+
+function updateBatch(list) {
+  list.forEach(item => {
+    menuList[menuList.findIndex(menu => menu.id === item.id)] = item
+  })
+}
+
+function getDescendantIds(list, ids) {
+  let res = []
+  for (let i = 0; i < list.length; i++) {
+    if (ids.includes(list[i].parentId)) {
+      res.push(list[i].id)
+      res.push(...getDescendantIds(list, [list[i].id]))
     }
-}]
+  }
+  return res
+}
+
+function move(id, targetId, order) {
+  let menu = menuList.find(item => item.id === id)
+  let descendantIds = getDescendantIds(menuList, [id]).concat(id)
+  if (descendantIds.includes(targetId) || targetId === id) {
+    return error('父级不能拖拽到自己的子级中')
+  } else if (menu === null) {
+    return error('菜单不存在')
+  } else {
+    // 需要更新的菜单
+    let updateMenus = []
+    // 获取新的兄弟菜单
+    let newBrotherMenus = menuList
+      .filter(item => item.parentId === targetId && item.id !== menu.id)
+      .sort((a, b) => a.order > b.order)
+    // 获取旧的兄弟菜单
+    let oldBrotherMenus = menuList
+      .filter(item => item.parentId === menu.parentId && item.id !== menu.id)
+      .sort((a, b) => a.order > b.order)
+    // 判断是否是同级拖拽
+    if (menu.parentId === targetId) {
+      newBrotherMenus.splice(Math.min(order - 1, newBrotherMenus.length), menu)
+      adjustOrder(newBrotherMenus)
+    } else {
+      adjustOrder(oldBrotherMenus)
+      menu.parentId = targetId
+      newBrotherMenus.splice(Math.min(order - 1, newBrotherMenus.length), menu)
+      adjustOrder(newBrotherMenus)
+      updateMenus.push(...oldBrotherMenus)
+    }
+    updateMenus.push(...newBrotherMenus)
+    updateBatch(updateMenus)
+    return success()
+  }
+}

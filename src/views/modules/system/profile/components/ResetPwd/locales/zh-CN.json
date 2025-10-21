@@ -1,0 +1,21 @@
+{
+  "oldPassword": "旧密码",
+  "newPassword": "新密码",
+  "confirmPassword": "确认密码",
+  "update": "修改",
+  "reset": "重置",
+  "successMsg": "密码修改成功！",
+  "rules": {
+    "oldPwdRequired": "旧密码不能为空",
+    "newPwdRequired": "新密码不能为空",
+    "newPwdLength": "密码长度需在 6 到 20 个字符之间",
+    "newPwdFormat": "密码必须包含数字和字母，不能包含空格",
+    "confirmPwdRequired": "确认密码不能为空",
+    "confirmPwdMatch": "两次输入的密码不一致"
+  },
+  "placeholder": {
+    "oldPassword": "请输入旧密码",
+    "newPassword": "请输入新密码",
+    "confirmPassword": "请确认新密码"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 100,
+  "quoteProps": "preserve",
+  "arrowParens": "avoid",
+  "plugins": ["prettier-plugin-organize-imports", "prettier-plugin-organize-attributes"],
+  "organizeImportsSkipDestructiveCodeActions": true,
+  "attributeGroups": ["id", "class", "v-if", "v-for", "v-.*", "^:", "^[a-z-]+$", "^@", ".*"]
+}

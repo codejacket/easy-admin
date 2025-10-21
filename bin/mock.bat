@@ -7,6 +7,6 @@ echo.
 cd %~dp0
 
 cd ..
-npm run dev_mock
+npm run mock
 
 pause

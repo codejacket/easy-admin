@@ -1,4 +1,4 @@
-import request from '@/utils/request'
+import request from '@/api'
 
 /**
  * {
@@ -8,6 +8,7 @@ import request from '@/utils/request'
  *   meta: {
  *     icon: 'xxx',         -> 设置该路由的图标，对应路径src/icons/svg
  *     title: 'xxx',        -> 设置该路由在侧边栏和面包屑中展示的标题
+ *     affixTab: true,      -> 如果设置为true，则会固定在tabs中(默认 false)
  *     noCache: true,       -> 如果设置为true，则不会被 <keep-alive> 缓存(默认 false)
  *     hidden: true,        -> 当设置true时，该路由不会在侧边栏出现，但仍然可访问。 如401，404等
  *     disabled: true,      -> 当设置true 时，该路由不会再出现，也不可访问。后台也会自动过滤disabled为true的路由，所以该设置可忽略
@@ -17,8 +18,8 @@ import request from '@/utils/request'
  */
 
 export function getRoutes() {
-    return request({
-        url: '/routes',
-        method: 'get'
-    })
+  return request({
+    url: '/routes',
+    method: 'get',
+  })
 }

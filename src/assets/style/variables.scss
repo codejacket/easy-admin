@@ -1,0 +1,43 @@
+html {
+  &.light {
+    --base-bg: hsl(0deg 0% 96%);
+
+    /* sidebar */
+    --sidebar-menu-bg: hsl(0deg 0% 100%);
+    --sidebar-menu-bg-hover: hsl(0deg 0% 97%);
+    --sidebar-sub-menu-bg: hsl(0deg 0% 96%);
+    --sidebar-sub-menu-bg-hover: hsl(0deg 0% 92%);
+    --sidebar-text-color: hsl(0deg 0% 40%);
+
+    /* navbar */
+    --navbar-bg: hsl(0deg 0% 100%);
+    --navbar-text-color: hsl(0deg 0% 36%);
+
+    /* tabs */
+    --tabs-bg: hsl(0deg 0% 100%);
+    --tabs-tag-bg: hsl(0deg 0% 98%);
+    --tabs-tag-bg-active: hsl(0deg 0% 95%);
+    --tabs-tag-text-color: hsl(0deg 0% 30%);
+  }
+
+  &.dark {
+    --base-bg: hsl(0deg 0% 4%);
+
+    /* sidebar */
+    --sidebar-menu-bg: hsl(0deg 0% 10%);
+    --sidebar-menu-bg-hover: hsl(0deg 0% 8%);
+    --sidebar-sub-menu-bg: hsl(0deg 0% 6%);
+    --sidebar-sub-menu-bg-hover: hsl(0deg 0% 4%);
+    --sidebar-text-color: hsl(0deg 0% 83%);
+
+    /* navbar */
+    --navbar-bg: hsl(0deg 0% 8%);
+    --navbar-text-color: hsl(0deg 0% 83%);
+
+    /* tabs */
+    --tabs-bg: hsl(0deg 0% 8%);
+    --tabs-tag-bg: hsl(0deg 0% 12%);
+    --tabs-tag-bg-active: hsl(0deg 0% 4%);
+    --tabs-tag-text-color: hsl(0deg 0% 93%);
+  }
+}

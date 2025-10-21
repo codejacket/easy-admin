@@ -1,110 +1,92 @@
-<template>
-    <el-container>
-        <el-aside v-show="!tabFullscreen">
-            <Sidebar :style="{ width: `${collapse ? 54 : sidebar.width}px` }">
-                <template #header>
-                    <SystemLogo class="logo-container" :collapse="collapse" />
-                </template>
-                <Menu :data="sidebarRoutes">
-                    <template #default="{ meta }">
-                        <div>
-                            <svg-icon class="menu-icon" :icon="meta.icon" />
-                        </div>
-                        <span>{{ meta.title }}</span>
-                    </template>
-                </Menu>
-                <template #footer>
-                    <div class="sidebar-footer-container">
-                        <Hamburger />
-                    </div>
-                </template>
-            </Sidebar>
-        </el-aside>
-        <el-main>
-            <div v-if="header.fixed">
-                <Navbar v-show="!tabFullscreen">
-                    <Hamburger style="margin: 0 15px" />
-                    <Breadcrumb v-if="header.showBreadcrumb" />
-                </Navbar>
-                <Tabs v-if="tabs.show" />
-            </div>
-            <el-scrollbar class="main-scrollbar">
-                <div v-if="!header.fixed">
-                    <Navbar v-show="!tabFullscreen">
-                        <Hamburger style="margin: 0 15px" />
-                        <Breadcrumb v-if="header.showBreadcrumb" />
-                    </Navbar>
-                    <Tabs v-if="tabs.show" />
-                </div>
-                <AppMain />
-            </el-scrollbar>
-        </el-main>
-    </el-container>
-</template>
-
-<script>
+<script name="Vertical" setup>
+import SystemLogo from '@/components/SystemLogo'
+import AppMain from '@/layout/components/AppMain'
+import Breadcrumb from '@/layout/components/Breadcrumb'
+import Hamburger from '@/layout/components/Hamburger'
+import Menu from '@/layout/components/Menu'
+import Navbar from '@/layout/components/Navbar'
+import Sidebar from '@/layout/components/Sidebar'
+import Tabs from '@/layout/components/Tabs'
 import { useAppStore } from '@store/app'
 import { useRouteStore } from '@store/route'
 import { useSettingsStore } from '@store/settings'
-import { mapState } from 'pinia'
 
-import Sidebar from "@/layout/components/Sidebar"
-import SystemLogo from '@/components/SystemLogo'
-import Menu from "@/layout/components/Menu"
-import Navbar from "@/layout/components/Navbar"
-import Tabs from "@/layout/components/Tabs"
-import AppMain from "@/layout/components/AppMain"
-import Hamburger from "@/components/Hamburger"
-import Breadcrumb from "@/components/Breadcrumb"
+const { tabFullscreen, collapse } = storeToRefs(useAppStore())
+const { sidebarRoutes } = storeToRefs(useRouteStore())
+const { header, sidebar, tabs } = storeToRefs(useSettingsStore())
 
-export default {
-    name: 'Vertical',
-    components: { Sidebar, SystemLogo, Menu, Navbar, Tabs, AppMain, Hamburger, Breadcrumb },
-    computed: {
-        ...mapState(useAppStore, ["collapse", "tabFullscreen"]),
-        ...mapState(useRouteStore, ["sidebarRoutes"]),
-        ...mapState(useSettingsStore, ["header", "tabs", "sidebar"]),
-    }
-}
+const sidebarWidth = computed(() => {
+  if (tabFullscreen.value) {
+    return 0
+  } else if (collapse.value) {
+    return 54
+  } else {
+    return sidebar.value.width
+  }
+})
 </script>
+
+<template>
+  <el-container>
+    <el-aside>
+      <Sidebar :width="sidebarWidth">
+        <template #header>
+          <SystemLogo class="w-full h-50px" :collapse="collapse" />
+        </template>
+        <Menu :data="sidebarRoutes">
+          <template #default="{ meta }">
+            <div>
+              <svg-icon class="mr-6px" :icon="meta.icon" />
+            </div>
+            <span>{{ meta.title }}</span>
+          </template>
+        </Menu>
+        <template #footer>
+          <div class="sidebar-footer">
+            <Hamburger color="var(--sidebar-text-color)" />
+          </div>
+        </template>
+      </Sidebar>
+    </el-aside>
+    <el-main class="flex flex-col">
+      <div v-if="header.fixed">
+        <Navbar :height="tabFullscreen ? 0 : header.height">
+          <Hamburger class="mx-15px" />
+          <Breadcrumb v-if="header.showBreadcrumb" />
+        </Navbar>
+        <Tabs v-if="tabs.show" />
+      </div>
+      <el-scrollbar class="main-scrollbar">
+        <div v-if="!header.fixed">
+          <Navbar :height="tabFullscreen ? 0 : header.height">
+            <Hamburger class="mx-15px" />
+            <Breadcrumb v-if="header.showBreadcrumb" />
+          </Navbar>
+          <Tabs v-if="tabs.show" />
+        </div>
+        <AppMain />
+      </el-scrollbar>
+    </el-main>
+  </el-container>
+</template>
 
 <style lang="scss" scoped>
 .el-container {
-    width: 100vw;
-    height: 100vh;
-    background: var(--base-bg);
+  width: 100vw;
+  height: 100vh;
 
-    .el-aside {
-        width: auto;
-        box-shadow: 1px 0 6px rgba(0, 0, 0, 0.1);
-        -webkit-box-shadow: 1px 0 6px rgba(0, 0, 0, 0.1);
-        z-index: 9;
+  .el-aside {
+    z-index: 9;
+    width: auto;
+    box-shadow: 1px 0 6px rgb(0 0 0 / 10%);
 
-        .logo-container {
-            width: 100%;
-            height: 50px;
-        }
-
-        .sidebar-footer-container {
-            height: 50px;
-            padding: 0 16px;
-            border-top: 1px solid rgba(128, 128, 128, 0.5);
-            display: flex;
-            align-items: center;
-
-            svg {
-                color: var(--sidebar-text-color);
-            }
-        }
-
-        .menu-icon {
-            color: var(--sidebar-text-color);
-        }
+    .sidebar-footer {
+      display: flex;
+      align-items: center;
+      height: 50px;
+      padding: 0 16px;
+      border-top: 1px solid rgb(128 128 128 / 50%);
     }
-
-    .el-main {
-        display: flex;
-        flex-direction: column;
-    }
+  }
 }
 </style>

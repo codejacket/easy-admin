@@ -1,1 +1,9 @@
-{}
+{
+  "introduction": "People have grown tired of the barbaric life of eating raw flesh and drinking blood, which is why they summoned the courage to borrow fire from the heavens to dispel the dark ages; and when people finally learned to ignite the woodpile with their own strength, the priests holding the fire quietly exited the historical stage. This is not a regret for those who hold the fire, for if they do not actively step into the new era, their tribe will one day be consumed by darkness. Easy-Admin relies on popular and stable technology stacks to lead you into the future!",
+  "overview": {
+    "users": "User Count",
+    "visits": "Visit Count",
+    "downloads": "Download Count",
+    "usage": "Usage Count"
+  }
+}

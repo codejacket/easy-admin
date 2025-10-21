@@ -1,74 +1,67 @@
-<template>
-    <div class="system-logo-container">
-        <slot name="logo">
-            <router-link to="/home">
-                <svg-icon icon="logo" />
-            </router-link>
-        </slot>
-        <h1 :class="{ collapse }">{{ $t('system.title') }}</h1>
-    </div>
-</template>
-
-<script>
-export default {
-    name: 'SystemLogo',
-    props: {
-        color: {
-            type: String,
-            default: 'var(--el-color-primary)'
-        },
-        background: {
-            type: String,
-            default: ''
-        },
-        collapse: {
-            type: Boolean,
-            default: false
-        }
-    }
-}
+<script name="SystemLogo" setup>
+const props = defineProps({
+  color: {
+    type: String,
+    default: 'var(--el-color-primary)',
+  },
+  collapse: {
+    type: Boolean,
+    default: false,
+  },
+  link: {
+    type: String,
+  },
+})
 </script>
+
+<template>
+  <div class="system-logo-container">
+    <router-link v-if="link" :to="link">
+      <svg-icon icon="logo" />
+    </router-link>
+    <svg-icon v-else icon="logo" />
+    <h1 class="system-logo-title" :class="{ collapse }">
+      <span class="pl-8px">{{ $t('system.title') }}</span>
+    </h1>
+  </div>
+</template>
 
 <style lang="scss" scoped>
 .system-logo-container {
-    background: v-bind(background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: v-bind(color);
+
+  a {
+    outline: none;
+  }
+
+  svg {
+    flex-shrink: 0;
+    font-size: 28px;
     color: v-bind(color);
+    cursor: pointer;
+    outline: none;
+  }
+
+  .system-logo-title {
     overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    font-family: Avenir, 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.28s;
 
-    a {
-        outline: none;
+    // width: calc-size(fit-content, size)
+    interpolate-size: allow-keywords;
+
+    &.collapse {
+      width: 0;
+      opacity: 0;
+      transform: scaleX(0);
     }
-
-    svg {
-        width: 28px;
-        height: 28px;
-        flex-shrink: 0;
-        color: v-bind(color);
-        outline: none;
-        cursor: pointer;
-    }
-
-    h1 {
-        width: 90px;
-        padding-left: 8px;
-        box-sizing: border-box;
-        font-weight: 600;
-        font-size: 14px;
-        font-family: Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;
-        text-align: end;
-        white-space: nowrap;
-        overflow: hidden;
-        transition: width 0.28s, padding-left 0.28s, transform 0.28s;
-        cursor: pointer;
-
-        &.collapse {
-            width: 0;
-            padding-left: 0;
-            transform: scaleX(0);
-        }
-    }
+  }
 }
 </style>

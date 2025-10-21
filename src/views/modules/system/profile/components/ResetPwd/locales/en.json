@@ -1,0 +1,21 @@
+{
+  "oldPassword": "Old Password",
+  "newPassword": "New Password",
+  "confirmPassword": "Confirm Password",
+  "update": "Update",
+  "reset": "Reset",
+  "successMsg": "Password updated successfully!",
+  "rules": {
+    "oldPwdRequired": "Old password is required",
+    "newPwdRequired": "New password is required",
+    "newPwdLength": "Password must be 6-20 characters long",
+    "newPwdFormat": "Password must contain numbers and letters, no spaces allowed",
+    "confirmPwdRequired": "Confirm password is required",
+    "confirmPwdMatch": "Two passwords do not match"
+  },
+  "placeholder": {
+    "oldPassword": "Please enter old password",
+    "newPassword": "Please enter new password",
+    "confirmPassword": "Please confirm new password"
+  }
+}

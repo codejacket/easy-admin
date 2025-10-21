@@ -1,0 +1,55 @@
+@use './element-ui';
+@use './nprogress';
+@use './sidebar';
+@use './tabs';
+@use './transition';
+@use './variables';
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+::view-transition-new(root),
+::view-transition-old(root) {
+  animation: none;
+}
+
+.dark::view-transition-old(root) {
+  z-index: 9999;
+}
+
+.grey {
+  filter: grayscale(100%);
+}
+
+.color-weak {
+  filter: invert(80%);
+}
+
+.handle-drag {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    color: var(--el-color-primary);
+  }
+}
+
+.primary-text {
+  color: var(--el-color-primary);
+}
+
+.app-card {
+  background: var(--el-bg-color);
+  box-shadow: 0 0 5px rgb(0 0 0 / 12%);
+}

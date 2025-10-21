@@ -1,250 +1,214 @@
-<template>
-    <div :class="['tabs-container', settingsStore.tabs.style]" :style="{ height: `${settingsStore.tabs.height}px` }">
-        <ScrollPane ref="scrollPane" class="scroll-pane" @scroll="closeMenu">
-            <TabLink ref="tab" v-for="tab in tabs" :key="tab" :route="tab" :draggable="settingsStore.tabs.draggable"
-                :show-icon="settingsStore.tabs.showIcon" :show-close="tab.name !== defaultTab"
-                @contextmenu.prevent="openMenu($event, tab)" @close="closeTab(tab)" />
-        </ScrollPane>
-        <TabsToolbar />
-        <ul class="contextmenu" v-show="visible" :style="{ left: left + 'px', top: top + 'px' }">
-            <li @click="closeTab(selectedTab)" v-if="showCloseTab">
-                <svg-icon icon="wrong" />
-                {{ $t('operation.closeCurrent') }}
-            </li>
-            <li @click="closeOthersTabs" v-if="showCloseOthersTabs">
-                <svg-icon icon="wrong" />
-                {{ $t('operation.closeOthers') }}
-            </li>
-            <li @click="closeLeftTabs" v-if="showCloseLeftTabs">
-                <svg-icon icon="arrow-L" />
-                {{ $t('operation.closeLeft') }}
-            </li>
-            <li @click="closeRightTabs" v-if="showCloseRightTabs">
-                <svg-icon icon="arrow-R" />
-                {{ $t('operation.closeRight') }}
-            </li>
-            <li @click="closeAllTabs" v-if="showCloseAllTabs">
-                <svg-icon icon="circle-wrong" />
-                {{ $t('operation.closeAll') }}
-            </li>
-        </ul>
-    </div>
-</template>
-
-<script>
+<script name="Tabs" setup>
 import { useSettingsStore } from '@store/settings'
 import { useTabsStore } from '@store/tabs'
-import { mapStores, mapState, mapActions } from 'pinia'
-import { useDraggable } from "vue-draggable-plus"
+import { useDraggable } from 'vue-draggable-plus'
+import { useRoute, useRouter } from 'vue-router'
+import ContextMenu from './ContextMenu'
+import TabLink from './TabLink'
+import TabsToolbar from './TabsToolbar'
 
-import ScrollPane from "./ScrollPane"
-import TabLink from "./TabLink"
-import TabsToolbar from "./TabsToolbar"
+const settingsStore = useSettingsStore()
+const tabsStore = useTabsStore()
+const { tabs } = storeToRefs(tabsStore)
+const route = useRoute()
+const router = useRouter()
 
-export default {
-    name: 'Tabs',
-    components: { ScrollPane, TabLink, TabsToolbar },
-    data() {
-        return {
-            left: 0,
-            top: 0,
-            visible: false,
-            selectedTab: {},
-            draggableInstance: null,
-        }
-    },
-    computed: {
-        ...mapStores(useSettingsStore),
-        ...mapState(useTabsStore, ["tabs", "defaultTab"]),
-        currentTabIndex() {
-            return this.tabs.findIndex(t => t.path === this.$route.path)
-        },
-        selectedTabIndex() {
-            return this.tabs.findIndex(t => t.path === this.selectedTab.path)
-        },
-        defaultTabIndex() {
-            return this.tabs.findIndex(t => t.name === this.defaultTab)
-        },
-        showCloseTab() {
-            return this.selectedTabIndex !== this.defaultTabIndex
-        },
-        showCloseOthersTabs() {
-            return this.tabs.length - 1 - (this.selectedTabIndex !== this.defaultTabIndex)
-        },
-        showCloseLeftTabs() {
-            return this.selectedTabIndex > (this.selectedTabIndex > this.defaultTabIndex)
-        },
-        showCloseRightTabs() {
-            return this.tabs.length - this.selectedTabIndex > (this.selectedTabIndex < this.defaultTabIndex ? 2 : 1)
-        },
-        showCloseAllTabs() {
-            return this.tabs.length > 1
-        },
-    },
-    mounted() {
-        this.init()
-        this.addTab(this.$route)
-        this.draggableInstance = useDraggable(this.$refs.scrollPane.$el.querySelector(".el-scrollbar__view"), this.tabs, {
-            animation: 150,
-            disabled: !this.settingsStore.tabs.draggable,
-            ghostClass: "ghost"
-        })
-        this.draggableInstance.start()
-        document.body.addEventListener("click", this.closeMenu)
-    },
-    unmounted() {
-        document.body.removeEventListener("click", this.closeMenu)
-    },
-    methods: {
-        ...mapActions(useTabsStore, ["init", "addTab", "delTabs"]),
-        openMenu(e, tab) {
-            this.left = Math.min(e.clientX - this.$el.getBoundingClientRect().left + 15, this.$el.offsetWidth - 105)
-            this.top = e.clientY - 50
-            this.visible = true
-            this.selectedTab = tab
-        },
-        closeMenu() {
-            this.visible = false
-        },
-        moveToCurrentTab() {
-            const tabs = this.$refs.tab
-            this.$nextTick(() => {
-                for (const [index, tab] of tabs.entries()) {
-                    if (tab.route.path === this.$route.path) {
-                        const scrollContainer = this.$el.querySelector(".scroll-container")
-                        const scrollWrapper = scrollContainer.querySelector(".el-scrollbar__wrap")
+const tabsRef = useTemplateRef('tabsRef')
+const tabRefs = useTemplateRef('tab')
+const scrollbarRef = useTemplateRef('scrollbarRef')
+const contextMenuRef = useTemplateRef('contextMenuRef')
 
-                        let containerWidth = scrollContainer.offsetWidth
-                        let tabAndTabSpacing = 4
-                        let firstTab = null
-                        let lastTab = null
-                        let prevTab = tabs[index - 1]
-                        let nextTab = tabs[index + 1]
+const selectedTab = ref(null)
+// prettier-ignore
+const selectedIndex = computed(() => tabs.value.findIndex(t => t.path === selectedTab.value.path))
+const currentIndex = computed(() => tabs.value.findIndex(t => t.path === route.path))
 
-                        if (tabs.length) {
-                            firstTab = tabs[0]
-                            lastTab = tabs.at(-1)
-                        }
+let draggableInstance = null
 
-                        if (firstTab === tab) {
-                            scrollWrapper.scrollLeft = 0
-                        } else if (lastTab === tab) {
-                            scrollWrapper.scrollLeft = scrollWrapper.scrollWidth - containerWidth
-                        } else {
-                            let afterNextTabOffsetLeft = nextTab.$el.offsetLeft + nextTab.$el.offsetWidth + tabAndTabSpacing
-                            let beforePrevTabOffsetLeft = prevTab.$el.offsetLeft - tabAndTabSpacing
+onMounted(() => {
+  draggableInstance = useDraggable(scrollbarRef.value.wrapRef.firstChild, tabs.value, {
+    animation: 150,
+    disabled: !settingsStore.tabs.draggable,
+    ghostClass: 'ghost',
+  })
+  draggableInstance.start()
+  document.body.addEventListener('click', closeMenu)
+})
 
-                            if (afterNextTabOffsetLeft > scrollWrapper.scrollLeft + containerWidth) {
-                                scrollWrapper.scrollLeft = afterNextTabOffsetLeft - containerWidth
-                            } else if (beforePrevTabOffsetLeft < scrollWrapper.scrollLeft) {
-                                scrollWrapper.scrollLeft = beforePrevTabOffsetLeft
-                            }
-                        }
+onUnmounted(() => {
+  document.body.removeEventListener('click', closeMenu)
+})
 
-                        break
-                    }
-                }
-            })
-        },
-        toLastTab() {
-            let lastTab = this.tabs.at(-1)
-            this.$router.push(lastTab.fullPath ?? lastTab.path)
-        },
-        closeTab(tab) {
-            let currentTabIndex = this.currentTabIndex
-            let tabIndex = this.tabs.findIndex(t => t.path === tab.path)
-            this.delTabs((tab, i) => i === tabIndex)
-            if (currentTabIndex === tabIndex) {
-                this.toLastTab()
-            }
-        },
-        closeOthersTabs() {
-            let currentTabIndex = this.currentTabIndex
-            let selectedTabIndex = this.selectedTabIndex
-            this.delTabs((tab, i) => i !== currentTabIndex)
-            if (currentTabIndex !== selectedTabIndex) {
-                this.toLastTab()
-            }
-        },
-        closeLeftTabs() {
-            let currentTabIndex = this.currentTabIndex
-            let selectedTabIndex = this.selectedTabIndex
-            this.delTabs((tab, i) => i < selectedTabIndex)
-            if (currentTabIndex < selectedTabIndex) {
-                this.toLastTab()
-            }
-        },
-        closeRightTabs() {
-            let currentTabIndex = this.currentTabIndex
-            let selectedTabIndex = this.selectedTabIndex
-            this.delTabs((tab, i) => i > selectedTabIndex)
-            if (currentTabIndex > selectedTabIndex) {
-                this.toLastTab()
-            }
-        },
-        closeAllTabs() {
-            this.delTabs(() => true)
-            this.toLastTab()
-        }
-    },
-    watch: {
-        $route(route) {
-            this.addTab(route)
-            this.moveToCurrentTab()
-        },
-        'settingsStore.tabs.draggable' (val) {
-            this.draggableInstance?.option?.('disabled', !val)
-        }
+watch(route, route => {
+  if (route.path !== '/') {
+    tabsStore.addTab(route)
+    moveToCurrentTab()
+  }
+})
+
+watch(
+  () => settingsStore.tabs.draggable,
+  val => {
+    draggableInstance?.option?.('disabled', !val)
+  },
+)
+
+function show(condition) {
+  return tabs.value.some((t, i) => condition(i) && !t.meta.affixTab)
+}
+
+function toLastTab() {
+  if (tabs.value.length) {
+    let lastTab = tabs.value.at(-1)
+    router.push(lastTab.fullPath ?? lastTab.path)
+  } else {
+    router.push('/')
+  }
+}
+
+function moveToCurrentTab() {
+  nextTick(() => {
+    let wrapRef = scrollbarRef.value.wrapRef
+    let currentTab = tabRefs.value[currentIndex.value]?.$el
+    let tabSpace = 4
+    let scrollbarWidth = scrollbarRef.value.$el.offsetWidth
+    let paddingLeft = tabRefs.value[currentIndex.value - 1]?.$el?.offsetWidth + 2 * tabSpace
+    let paddingRight = tabRefs.value[currentIndex.value + 1]?.$el?.offsetWidth + 2 * tabSpace
+    let left = currentTab.offsetLeft - wrapRef.scrollLeft
+    let offsetLeft = left - paddingLeft
+    let offsetRight = left + currentTab.offsetWidth - scrollbarWidth + paddingRight
+    if (currentIndex.value === 0) {
+      wrapRef.scrollLeft = 0
+    } else if (currentIndex.value === tabs.value.length - 1) {
+      wrapRef.scrollLeft = wrapRef.scrollWidth - scrollbarWidth
+    } else if (offsetLeft < 0) {
+      wrapRef.scrollLeft += offsetLeft
+    } else if (offsetRight > 0) {
+      wrapRef.scrollLeft += offsetRight
     }
+  })
+}
+
+function openMenu(tab, e) {
+  if (tabs.value.length === 1) return
+  let left = tabsRef.value.getBoundingClientRect().left
+  let x = Math.min(e.clientX - left, tabsRef.value.offsetWidth - 105)
+  let y = e.clientY - 50
+  contextMenuRef.value.openMenu(x, y)
+  selectedTab.value = tab
+}
+
+function closeMenu() {
+  contextMenuRef.value.closeMenu()
+}
+
+function closeTab(tab) {
+  let tabIndex = tabs.value.findIndex(t => t.path === tab.path)
+  let flag = currentIndex.value === tabIndex
+  tabsStore.delTabs((tab, i) => i === tabIndex)
+  if (flag) toLastTab()
+}
+
+function closeTabs(condition) {
+  let flag = condition(currentIndex.value, selectedIndex.value)
+  tabsStore.delTabs((tab, i) => condition(i))
+  if (flag) toLastTab()
 }
 </script>
 
+<template>
+  <div
+    :class="['tabs-container', settingsStore.tabs.style]"
+    :style="{ height: `${settingsStore.tabs.height}px` }"
+    ref="tabsRef"
+  >
+    <el-scrollbar class="tabs-scrollbar" ref="scrollbarRef">
+      <TabLink
+        v-for="tab in tabs"
+        :key="tab"
+        :route="tab"
+        :draggable="settingsStore.tabs.draggable"
+        :show-icon="settingsStore.tabs.showIcon"
+        ref="tab"
+        @contextmenu.prevent="openMenu(tab, $event)"
+        @close="closeTab(tab)"
+      />
+    </el-scrollbar>
+    <TabsToolbar />
+    <ContextMenu ref="contextMenuRef">
+      <li v-if="show(i => i === selectedIndex)" @click="closeTab(selectedTab)">
+        <svg-icon icon="wrong" />
+        {{ $t('common.closeCurrent') }}
+      </li>
+      <li v-if="show(i => i !== selectedIndex)" @click="closeTabs(i => i !== selectedIndex)">
+        <svg-icon icon="wrong" />
+        {{ $t('common.closeOthers') }}
+      </li>
+      <li v-if="show(i => i < selectedIndex)" @click="closeTabs(i => i < selectedIndex)">
+        <svg-icon icon="arrow-L" />
+        {{ $t('common.closeLeft') }}
+      </li>
+      <li v-if="show(i => i > selectedIndex)" @click="closeTabs(i => i > selectedIndex)">
+        <svg-icon icon="arrow-R" />
+        {{ $t('common.closeRight') }}
+      </li>
+      <li v-if="show(i => true)" @click="closeTabs(i => true)">
+        <svg-icon icon="circle-wrong" />
+        {{ $t('common.closeAll') }}
+      </li>
+    </ContextMenu>
+  </div>
+</template>
+
 <style lang="scss" scoped>
-    .tabs-container {
-        width: 100%;
-        height: 34px;
-        background: var(--tabs-bg);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
+.tabs-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 34px;
+  background: var(--tabs-bg);
 
-        .scroll-pane .ghost {
-            opacity: 0.2;
-        }
+  .tabs-scrollbar {
+    height: inherit;
+    white-space: nowrap;
 
-        .contextmenu {
-            padding: 5px 0;
-            border-radius: 4px;
-            border: 1px solid var(--el-border-color-light);
-            background: var(--el-bg-color-overlay);
-            box-shadow: var(--el-box-shadow-light);
-            font-size: 12px;
-            font-weight: 400;
-            position: absolute;
-            list-style-type: none;
-            z-index: 3000;
-            cursor: pointer;
-
-            li {
-                margin: 0;
-                padding: 7px 16px;
-                color: var(--el-text-color-regular);
-
-                svg {
-                    color: var(--el-text-color-regular);
-                    margin-right: 5px;
-                }
-
-                &:hover {
-                    background: var(--el-color-primary-light-9);
-                    color: var(--el-color-primary);
-
-                    svg {
-                        color: var(--el-color-primary);
-                    }
-                }
-            }
-        }
+    :deep(.el-scrollbar__bar) {
+      bottom: 0;
     }
+
+    :deep(.el-scrollbar__wrap) {
+      height: inherit;
+
+      .el-scrollbar__view {
+        display: flex;
+        gap: 4px;
+        align-items: end;
+        height: inherit;
+      }
+    }
+  }
+
+  li {
+    padding: 7px 16px;
+    margin: 0;
+    color: var(--el-text-color-regular);
+    border-radius: 3px;
+
+    svg {
+      margin-right: 5px;
+      color: var(--el-text-color-regular);
+    }
+
+    &:hover {
+      color: var(--el-color-primary);
+      background: var(--el-color-primary-light-9);
+
+      svg {
+        color: var(--el-color-primary);
+      }
+    }
+  }
+}
 </style>

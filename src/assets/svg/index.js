@@ -1,4 +1,4 @@
-// 目录, 是否递归查找, 规则
-const req = require.context('./', true, /\.svg$/)
+import { addCollection } from '@iconify/vue'
+import collections from 'virtual:local-iconify'
 
-req.keys().forEach(req)
+collections.forEach(addCollection)

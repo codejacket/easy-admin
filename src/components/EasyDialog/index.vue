@@ -1,126 +1,150 @@
-<template>
-    <el-dialog class="easy-dialog" :show-close="false" :fullscreen="fullscreen" align-center append-to-body>
-        <template #header="{ close, titleClass }">
-            <span :class="titleClass">{{ $attrs.title }}</span>
-            <div class="flex g12">
-                <svg-icon :icon="fullscreen ? 'fullscreen-exit' : 'square'" v-if="showFullscreen" @click="fullscreen = !fullscreen" />
-                <svg-icon icon="wrong" @click="close" />
-            </div>
-        </template>
-        <el-scrollbar v-bind="bodyProps" v-if="scroll">
-            <div class="p18 relative" v-loading="loading" element-loading-background="var(--el-dialog-bg-color)">
-                <slot />
-            </div>
-        </el-scrollbar>
-        <div :style="bodyProps" class="p18 relative" style="box-sizing:border-box" v-loading="loading"
-            element-loading-background="var(--el-dialog-bg-color)" v-else>
-            <slot />
-        </div>
-        <template #footer v-if="showFooter">
-            <slot name="footer" :close="close">
-                <easy-button t="common.cancel" auto-insert-space @click="close" />
-                <easy-button type="primary" t="common.confirm" auto-insert-space @click="handleConfirm" />
-            </slot>
-        </template>
-    </el-dialog>
-</template>
+<script name="EasyDialog" setup>
+import { createRefProxy } from '@/utils/vue'
+import { useToggle } from '@vueuse/core'
 
-<script>
-export default {
-    name: 'EasyDialog',
-    props: {
-        loading: {
-            type: Boolean,
-            default: false
-        },
-        height: {
-            type: [String, Number, Array],
-            default: ['0', '600px']
-        },
-        showFullscreen: {
-            type: Boolean,
-            default: true
-        },
-        scroll: {
-            type: Boolean,
-            default: true
-        },
-        confirm: {
-            type: Function
-        }
-    },
-    data() {
-        return {
-            fullscreen: false
-        }
-    },
-    computed: {
-        showFooter() {
-            return Boolean(this.confirm || this.$slots.footer) && !this.loading
-        },
-        bodyProps() {
-            if (this.fullscreen) {
-                let headerHeight = 48.8
-                let footerHeight = 60
-                return {
-                    height: `calc(100vh - ${headerHeight + this.showFooter * footerHeight}px)`
-                }
-            } else {
-                if (this.height instanceof Array) {
-                    return {
-                        minHeight: this.height[0] instanceof String ? this.height[0] : `${this.height[0]}px`,
-                        maxHeight: this.height[1] instanceof String ? this.height[1] : `${this.height[1]}px`,
-                    }
-                } else {
-                    return {
-                        height: this.height
-                    }
-                }
-            }
-        }
-    },
-    methods: {
-        close() {
-            this.$emit('update:modelValue', false)
-        },
-        async handleConfirm() {
-            let res = await this.confirm()
-            if (res !== false) this.close()
-        }
+const modelValue = defineModel()
+
+const props = defineProps({
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  showFullscreen: {
+    type: Boolean,
+    default: true,
+  },
+  height: {
+    type: [String, Number, Array],
+    default: ['0', '600px'],
+  },
+  scroll: {
+    type: Boolean,
+    default: true,
+  },
+  confirm: {
+    type: Function,
+  },
+})
+
+const [fullscreen, toggle] = useToggle(false)
+
+const slots = useSlots()
+const showFooter = computed(() => {
+  return Boolean(props.confirm || slots.footer) && !props.loading
+})
+
+const bodyProps = computed(() => {
+  if (fullscreen.value) {
+    let headerHeight = 48.8
+    let footerHeight = 60
+    return {
+      height: `calc(100vh - ${headerHeight + showFooter.value * footerHeight}px)`,
     }
+  } else {
+    let height = props.height
+    if (height instanceof Array) {
+      return {
+        minHeight: typeof height[0] === 'string' ? height[0] : `${height[0]}px`,
+        maxHeight: typeof height[1] === 'string' ? height[1] : `${height[1]}px`,
+      }
+    } else {
+      return {
+        height,
+      }
+    }
+  }
+})
+
+const dialogRef = useTemplateRef('dialogRef')
+
+function close() {
+  modelValue.value = false
 }
+
+async function handleConfirm() {
+  let res = await props.confirm()
+  if (res !== false) close()
+}
+
+defineExpose(createRefProxy(dialogRef))
 </script>
 
+<template>
+  <el-dialog
+    class="easy-dialog"
+    v-model="modelValue"
+    :show-close="false"
+    :fullscreen="fullscreen"
+    align-center
+    append-to-body
+    ref="dialogRef"
+  >
+    <template #header="{ close, titleClass }">
+      <span :class="titleClass">{{ $attrs.title }}</span>
+      <div class="flex items-center gap12px">
+        <svg-icon
+          v-if="showFullscreen"
+          :icon="fullscreen ? 'fullscreen-exit' : 'square'"
+          @click="toggle()"
+        />
+        <svg-icon icon="wrong" @click="close" />
+      </div>
+    </template>
+    <el-scrollbar v-if="scroll" v-bind="bodyProps">
+      <div
+        class="p18px relative"
+        v-loading="loading"
+        element-loading-background="var(--el-dialog-bg-color)"
+      >
+        <slot />
+      </div>
+    </el-scrollbar>
+    <div
+      class="p18px relative box-border"
+      v-loading="loading"
+      v-else
+      :style="bodyProps"
+      element-loading-background="var(--el-dialog-bg-color)"
+    >
+      <slot />
+    </div>
+    <template v-if="showFooter" #footer>
+      <slot name="footer">
+        <easy-button t="common.cancel" auto-insert-space @click="close" />
+        <easy-button t="common.confirm" type="primary" auto-insert-space @click="handleConfirm" />
+      </slot>
+    </template>
+  </el-dialog>
+</template>
+
 <style lang="scss">
-    .easy-dialog {
-        padding: 0;
-        transition: 0.3s;
-        interpolate-size: allow-keywords;
+.easy-dialog {
+  interpolate-size: allow-keywords;
+  padding: 0;
+  transition: 0.3s;
 
-        .el-dialog__header {
-            padding: 12px;
-            background: rgba(128, 128, 128, 0.06);
-            border-bottom: 1px solid var(--el-border-color-lighter);
-            display: flex;
-            justify-content: space-between;
+  .el-dialog__header {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    background: rgb(128 128 128 / 6%);
+    border-bottom: 1px solid var(--el-border-color-lighter);
 
-            .flex {
-                align-items: center;
+    .flex {
+      svg {
+        color: var(--el-text-color-primary);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
 
-                svg {
-                    color: var(--el-text-color-primary);
-                    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-                    cursor: pointer;
-
-                    &:hover {
-                        color: var(--el-color-primary);
-                    }
-                }
-            }
+        &:hover {
+          color: var(--el-color-primary);
         }
-
-        .el-dialog__footer {
-            padding: 14px;
-        }
+      }
     }
+  }
+
+  .el-dialog__footer {
+    padding: 14px;
+  }
+}
 </style>

@@ -1,55 +1,68 @@
-<template>
-    <div class="login-log" v-loading="loading">
-        <div class="flex-column g14 p14">
-            <easy-table :data="list">
-                <el-table-column prop="title" label="详情" width="200" align="left" />
-                <el-table-column prop="ipAddress" label="IP地址" width="160" />
-                <el-table-column prop="loginLocation" label="登录地点" min-width="200" align="left" />
-                <el-table-column prop="browser" label="浏览器类型" width="120" />
-                <el-table-column prop="os" label="操作系统" width="120" />
-                <el-table-column prop="loginTime" label="时间" width="180" />
-            </easy-table>
-            <pagination :total="total" v-model:current-page="params.pageIndex" v-model:page-size="params.pageSize" @change="getList" />
-        </div>
-    </div>
-</template>
-
-<script>
+<script name="LoginLog" setup>
 import { getLoginLogs } from '@api/system/profile'
+import { useI18n } from 'vue-i18n'
 
-export default {
-    name: 'LoginLog',
-    data() {
-        return {
-            loading: false,
-            total: 0,
-            list: [],
-            params: {
-                pageIndex: 1,
-                pageSize: 10,
-            }
-        }
-    },
-    created() {
-        this.getList()
-    },
-    methods: {
-        getList() {
-            this.loading = true
-            getLoginLogs(this.params).then(res => {
-                console.log(res)
-                this.loading = false
-                this.list = res.data.rows
-                this.total = res.data.total
-            })
-        }
-    }
+const { t } = useI18n()
+
+const loading = ref(false)
+
+const list = ref([])
+
+const total = ref(0)
+
+const params = ref({
+  currentPage: 1,
+  pageSize: 10,
+})
+
+getList()
+
+async function getList() {
+  loading.value = true
+  const { data } = await getLoginLogs(params.value)
+  list.value = data.list
+  total.value = data.total
+  loading.value = false
 }
 </script>
 
-<style lang="scss" scoped>
-.login-log {
-    height: 100%;
-    padding-left: 8px;
-}
-</style>
+<template>
+  <div class="h100% pl-8px" v-loading="loading">
+    <div class="flex flex-col gap14px p14px">
+      <easy-table :data="list">
+        <el-table-column width="60" prop="id">
+          <template #header>{{ t('columns.id') }}</template>
+        </el-table-column>
+        <el-table-column min-width="180" prop="msg" align="left">
+          <template #header>{{ t('columns.msg') }}</template>
+        </el-table-column>
+        <el-table-column width="120" prop="ipAddress">
+          <template #header>{{ t('columns.ipAddress') }}</template>
+        </el-table-column>
+        <el-table-column min-width="180" prop="loginLocation" align="left">
+          <template #header>{{ t('columns.loginLocation') }}</template>
+        </el-table-column>
+        <el-table-column width="120" prop="browser">
+          <template #header>{{ t('columns.browser') }}</template>
+        </el-table-column>
+        <el-table-column width="120" prop="os">
+          <template #header>{{ t('columns.os') }}</template>
+        </el-table-column>
+        <el-table-column width="180" :formatter="row => $parseTime(row.loginTime)" prop="loginTime">
+          <template #header>{{ t('columns.loginTime') }}</template>
+        </el-table-column>
+      </easy-table>
+      <pagination
+        v-model:current-page="params.currentPage"
+        v-model:page-size="params.pageSize"
+        :total="total"
+        @change="getList"
+      />
+    </div>
+  </div>
+</template>
+
+<i18n src="./locales/en.json" locale="en" />
+<i18n src="./locales/zh-CN.json" locale="zh-CN" />
+
+<style lang="scss" scoped></style>

@@ -1,40 +1,37 @@
-<template>
-    <el-menu :default-active="$route.path" :collapse="collapse" :unique-opened="sidebar.uniqueOpened">
-        <template v-for="route in data" :key="route.path">
-            <MenuItem  :item="route" v-show="route.meta && !route.meta.hidden">
-                <template #default="{ meta }">
-                    <slot :meta="meta" />
-                </template>
-            </MenuItem>
-        </template>
-    </el-menu>
-</template>
-
-<script>
+<script name="Menu" setup>
 import { useAppStore } from '@store/app'
 import { useSettingsStore } from '@store/settings'
-import { mapState } from 'pinia'
+import MenuItem from './MenuItem'
 
-import MenuItem from "./MenuItem"
+const props = defineProps({
+  data: {
+    type: Array,
+    default: [],
+  },
+})
 
-export default {
-    name: 'Menu',
-    components: { MenuItem },
-    props: {
-        data: {
-            type: Array,
-            default: []
-        }
-    },
-    computed: {
-        ...mapState(useAppStore, ["collapse"]),
-        ...mapState(useSettingsStore, ["sidebar"])
-    }
-}
+const { collapse } = storeToRefs(useAppStore())
+const { sidebar } = storeToRefs(useSettingsStore())
 </script>
 
-<style lang="scss" scoped>
-.el-menu {
-    width: v-bind('sidebar.width + "px"');
-}
-</style>
+<template>
+  <el-menu
+    :default-active="$route.path"
+    :collapse="collapse"
+    :unique-opened="sidebar.uniqueOpened"
+    :collapse-transition="false"
+  >
+    <template v-for="route in data" :key="route.path">
+      <MenuItem v-if="route.meta && !route.meta.hidden" :item="route">
+        <template #default="{ meta }">
+          <slot :meta="meta">
+            <div>
+              <svg-icon class="mr-6px" :icon="meta.icon" />
+            </div>
+            <span>{{ meta.title }}</span>
+          </slot>
+        </template>
+      </MenuItem>
+    </template>
+  </el-menu>
+</template>

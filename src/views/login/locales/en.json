@@ -1,13 +1,12 @@
 {
-    "account": "Account: admin",
-    "password": "Password: admin1234",
-    "captcha": "Captcha",
-    "remember": "Remember me",
-    "register": "Register now",
-    "login": "Login",
-    "logging": "Logging in...",
-    "rules": {
-        "account": "Please enter your account",
-        "password": "Please enter your password"
-    }
+  "account": "Account: admin",
+  "password": "Password: admin1234",
+  "remember": "Remember me",
+  "register": "Register now",
+  "login": "Login",
+  "logging": "Logging in...",
+  "rules": {
+    "account": "Please enter your account",
+    "password": "Please enter your password"
+  }
 }

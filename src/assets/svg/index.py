@@ -13,17 +13,24 @@ modified_svg_files = []
 is_format = False
 # 修改配置
 modified_config = {
-    'add': [],
+    'add': [{
+        'target': ['path', 'rect', 'circle', 'g', 'ellipse'],
+        'option': {
+            'fill': 'none'
+        }
+    }],
     'delete': [{
         'target': True,
         'option': ['class']
+    }, {
+        'target': ['svg'],
+        'option': ['fill']
     }],
     'update': [{
         'target': ['path', 'rect', 'circle', 'g', 'ellipse'],
         'option': {
             'stroke': 'currentColor',
             'data-follow-stroke': 'currentColor',
-            'fill': 'currentColor',
             'data-follow-fill': 'currentColor',
             'stroke-width': 4,
             'stroke-linejoin': 'round',
@@ -54,8 +61,10 @@ for svg in svg_files:
         # 寻找 target
         for tag in soup.find_all(operate['target']):
             for attr, value in operate['option'].items():
-                # 新增属性
-                tag[attr] = value
+                # 检查标签是否有该属性
+                if attr not in tag.attrs:
+                    # 新增属性
+                    tag[attr] = value
 
     # delete
     for operate in modified_config['delete']:

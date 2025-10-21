@@ -1,13 +1,41 @@
+<script name="Avatar" setup>
+import { $t } from '@/locales'
+import modal from '@plugins/modal'
+import { useAppStore } from '@store/app'
+import { useTabsStore } from '@store/tabs'
+import { useUserStore } from '@store/user'
+import { useRouter } from 'vue-router'
+
+const { showSettings } = storeToRefs(useAppStore())
+const userStore = useUserStore()
+const { name, nickname, avatar } = storeToRefs(userStore)
+const tabsStore = useTabsStore()
+const router = useRouter()
+
+async function handleLogout() {
+  await modal.confirm.warning($t('message.confirmLogout'))
+  await userStore.logout()
+  await router.push('/login')
+  // 清除所有标签页
+  tabsStore.$reset()
+}
+</script>
+
 <template>
   <el-dropdown trigger="click" teleported>
     <slot :src="avatar" :username="nickname || name">
-      <el-avatar :src="avatar" :size="28" class="user-avatar" alt="avatar">
+      <el-avatar
+        class="box-border w-28px h-28px rounded-full"
+        :src="avatar"
+        :size="28"
+        alt="avatar"
+      >
         <img src="@/assets/img/default-avatar.png" />
       </el-avatar>
     </slot>
     <template #dropdown>
       <el-dropdown-menu>
-        <el-dropdown-item @click="$router.push('/system/profile')">
+        <el-dropdown-item @click="router.push('/system/profile')">
           <span>
             <svg-icon icon="user-center" />
             {{ $t('common.userCenter') }}
@@ -29,37 +57,3 @@
     </template>
   </el-dropdown>
 </template>
-
-<script>
-import { useAppStore } from '@store/app'
-import { useTabsStore } from '@store/tabs'
-import { useUserStore } from '@store/user'
-import { mapState, mapWritableState, mapActions } from 'pinia'
-
-export default {
-  name: "Avatar",
-  computed: {
-    ...mapState(useUserStore, ["name", "nickname", "avatar"]),
-    ...mapWritableState(useAppStore, ["showSettings"]),
-  },
-  methods: {
-    ...mapActions(useUserStore, ["logout"]),
-    async handleLogout() {
-      await this.$modal.confirm.warning(this.$t('message.confirmLogout'))
-      await this.logout()
-      await this.$router.push("/login")
-      // 清除所有标签页
-      useTabsStore().$reset()
-    },
-  },
-}
-</script>
-
-<style scoped>
-  .user-avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    box-sizing: border-box;
-  }
-</style>

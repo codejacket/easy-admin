@@ -1,42 +1,51 @@
+<script name="Register" setup>
+import Copyright from '@/components/Copyright'
+import modal from '@plugins/modal'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+
+const { t } = useI18n()
+const router = useRouter()
+
+onMounted(() => {
+  modal.alert
+    .error(`<font color='red'>${t('systemTip')}</font>`, {
+      dangerouslyUseHTMLString: true,
+      showClose: false,
+    })
+    .then(() => {
+      router.push('/login')
+    })
+    .catch(() => {})
+})
+</script>
+
 <template>
-  <div class="register">
+  <div class="register-page">
     <Copyright class="copyright" />
   </div>
 </template>
 
-<i18n locale="en" src="./locales/en.json"></i18n>
-<i18n locale="zh" src="./locales/zh.json"></i18n>
-
-<script>
-import Copyright from '@/components/Copyright'
-export default {
-  name: 'Register',
-  components: { Copyright },
-  mounted() {
-    this.$modal.alert.error(`<font color='red'>${this.$t('systemTipDesc')}</font>`, {
-      dangerouslyUseHTMLString: true,
-      showClose: false,
-    }).then(() => {
-      this.$router.push("/login")
-    }).catch(() => { })
-  }
-}
-</script>
+<i18n src="./locales/en.json" locale="en" />
+<i18n src="./locales/zh-CN.json" locale="zh-CN" />
 
 <style lang="scss" scoped>
-  .register {
-    width: 100vw;
-    height: 100vh;
-    background-image: url("@/assets/img/login-background.jpg");
-    background-size: cover;
-    position: relative;
+.register-page {
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(
+    65% 52% at 50% 55%,
+    hsl(var(--el-color-primary-h) 84% 58% / 40%) 0,
+    hsl(calc(var(--el-color-primary-h) + 10) 80% 50% / 30.2%) 50%,
+    #09090b00
+  );
+}
 
-    .copyright {
-      color: #999;
-      position: absolute;
-      left: 50%;
-      bottom: 16px;
-      transform: translateX(-50%);
-    }
-  }
+.copyright {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  color: #999;
+  transform: translateX(-50%);
+}
 </style>

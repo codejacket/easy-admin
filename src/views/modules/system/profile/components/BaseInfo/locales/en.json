@@ -1,0 +1,21 @@
+{
+  "avatar": "Avatar",
+  "username": "Username",
+  "nickname": "Nickname",
+  "phoneNumber": "PhoneNumber",
+  "gender": "Gender",
+  "email": "Email",
+  "createTime": "CreateTime",
+  "brief": "Brief",
+  "submit": "Submit Update",
+  "rules": {
+    "phoneNumber": "Incorrect phone number input",
+    "email": "Incorrect email input"
+  },
+  "placeholder": {
+    "nickname": "Please enter your nickname",
+    "phoneNumber": "Please enter your phone number",
+    "email": "Please enter your email",
+    "brief": "Briefly introduce yourself ~"
+  }
+}

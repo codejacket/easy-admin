@@ -1,32 +1,38 @@
 export function print(content) {
-    let iframe = document.body.appendChild(document.createElement('iframe'))
-    iframe.style.display = 'none'
-    let w = iframe.contentWindow || iframe.contentDocument
-    let doc = iframe.contentDocument || iframe.contentWindow.document
-    doc.open()
-    doc.write(content)
-    doc.close()
-    w.document.execCommand('print', false, null)
-    w.close()
-    document.body.removeChild(iframe)
+  let iframe = document.body.appendChild(document.createElement('iframe'))
+  iframe.style.display = 'none'
+  let w = iframe.contentWindow || iframe.contentDocument
+  let doc = iframe.contentDocument || iframe.contentWindow.document
+  doc.open()
+  doc.write(content)
+  doc.close()
+  w.document.execCommand('print', false, null)
+  w.close()
+  document.body.removeChild(iframe)
 }
 
-export function printTable(data, columns, options) {
-    let props = columns.map(({ prop }) => prop)
-    let rows = data.map(item => props.map(prop => item[prop] || ''))
-    let content =  `
+export function printTable(config) {
+  let { data, columns, title } = config
+  let props = columns.map(({ prop }) => prop)
+  let rows = data.map(item => props.map(prop => item[prop] || ''))
+  let content = `
         <style>${style}</style>
+        ${title ? `<title>${title}</title>` : ''}
         <table cellpadding="0" cellspacing="0">
             <thead>
-                <tr>${columns.map(({ label }) => `<th>${label || ''}</th>`)?.join('')}</tr>
+                <tr>
+                ${columns.map(({ label }) => `<th>${label || ''}</th>`)?.join('')}
+                </tr>
             </thead>
-            <tbody>${rows.map(row => `<tr>${row.map(col => `<td>${col}</td>`).join('')}</tr>`).join('')}</tbody>
+            <tbody>
+            ${rows.map(row => `<tr>${row.map(col => `<td>${col}</td>`).join('')}</tr>`).join('')}
+            </tbody>
         </table>`
-    print(content)
+  print(content)
 }
 
-const style =
-    `table {
+const style = `
+    table {
         width: 100%;
     }
     th, td {

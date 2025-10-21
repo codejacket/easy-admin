@@ -1,0 +1,15 @@
+{
+  "projectIntro": "项目介绍",
+  "projectInfo": "项目信息",
+  "version": "版本号",
+  "buildTime": "最后构建时间",
+  "license": "开源协议",
+  "author": "作者",
+  "github": "Github地址",
+  "preview": "预览地址",
+  "dependencies": "生产依赖",
+  "devDependencies": "开发依赖",
+  "info": {
+    "introduction": "是一款基于 Vue3 开发的开源后台管理系统框架，采用 Vue Vite、Vue Router、Vue I18n、Element Plus、Pinia、Axios 等主流技术栈。它具备丰富的基础功能模块，支持多语言切换与灵活的权限管理，代码结构清晰，扩展性强。无论是快速搭建项目，还是作为学习 Vue3 开发的实践范例， Easy-Admin 都能提供高效、便捷的解决方案，帮助开发者轻松应对各类后台管理需求 。"
+  }
+}

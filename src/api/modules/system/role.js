@@ -1,3 +1,3 @@
 import { crud } from '@/utils/crud'
 
-export let { list, get, add, update, del } = crud("system/role")
+export const { listRole, getRole, addRole, updateRole, delRole } = crud('/system/role', 'role')

@@ -1,0 +1,6 @@
+{
+  "captchaTitle": "请完成安全验证",
+  "validateSuccess": "验证成功",
+  "validateFailed": "验证失败",
+  "captchaSliderTip": "按住左边按钮拖动完成上方拼图"
+}

@@ -1,117 +1,112 @@
-const { usersList } = require(`${process.cwd()}/mock/data`)
-const { pick, tokenManager, tap } = require(`${process.cwd()}/mock/utils`)
+import { find, pick } from 'lodash-es'
+import { authList, roleList, userList } from '../data'
+import { getUser } from '../utils/index'
+import { generateToken } from '../utils/jwt'
+import { error, success } from '../utils/result'
 
-module.exports = [{
+const captchaType = 'pick'
+
+export default [
+  {
     url: '/mock/login',
     method: 'post',
-    response(req) {
-        const { username, password } = req.body
-        const user = usersList.find(item => item.username === username && item.password === password)
-        if (user) {
-            return {
-                code: 200,
-                msg: '操作成功',
-                token: tokenManager.createToken({
-                    username: username,
-                    password: password
-                })
-            }
-        } else {
-            return {
-                code: 500,
-                msg: '用户名或密码错误'
-            }
+    response({ body }) {
+      const { username, password } = body
+      const user = find(userList, { username, password })
+      if (user) {
+        return {
+          code: 200,
+          msg: '登录成功',
+          token: generateToken(pick(user, ['username', 'nickname'])),
         }
-    }
-}, {
+      } else {
+        return error('用户名或密码错误')
+      }
+    },
+  },
+  {
     url: '/mock/logout',
-    method: 'post'
-}, {
+    method: 'post',
+  },
+  {
     url: '/mock/getInfo',
     method: 'get',
-    response(req) {
-        let data = tokenManager.parseToken(req.headers.authorization.replace('Bearer ', ''))
-        let user = usersList.find(item => item.username === data.username && item.password === data.password)
-        return {
-            code: 200,
-            mag: "操作成功",
-            data: {
-                roles: ["admin"],
-                permissions: [],
-                user: pick(user, ['username', 'nickname', 'avatar']),
-            }
-        }
-    }
-}, {
+    response({ headers }) {
+      let user = getUser(headers)
+      let roles = roleList.filter(item => user.roles.includes(item.id))
+      let authIds = [...new Set(roles.flatMap(item => item.auths))]
+      let auths = authList.filter(item => authIds.includes(item.id))
+      return success({
+        roles: roles.map(item => item.key),
+        auths: auths.map(item => item.key),
+        user: pick(user, ['username', 'nickname', 'avatar']),
+      })
+    },
+  },
+  {
     url: '/mock/captcha',
     method: 'get',
-    response(req) {
-        let vaildKey = 'captcha'
-        let captchaType = req.query.captchaType || 'image'
-        let captcha = {
-            'pick': {
-                code: btoa(`${vaildKey}:${captchaType}`),
-                img: 'https://unpkg.com/@vbenjs/static-source@0.1.7/source/default-captcha-image.jpeg',
-                options: ['<六角形>', '雨', '<圆>']
-            },
-            'slide': {
-                code: btoa(`${vaildKey}:${captchaType}`),
-                img: 'https://p9-catpcha.byteimg.com/tos-cn-i-188rlo5p4y/11f43444d4e7463a9f9da4df85e49bc0~tplv-188rlo5p4y-2.jpeg',
-                pieces: 'https://p9-catpcha.byteimg.com/tos-cn-i-188rlo5p4y/0f382e60408e49ac860551096b21861e~tplv-188rlo5p4y-1.png',
-                y: '50',
-            },
-            'image': {
-                code: btoa(`${vaildKey}:${captchaType}`),
-                img: 'https://pic.baike.soso.com/ugc/baikepic2/15771/20180126172741-129018030_jpg_273_136_7519.jpg/300',
-            }
-        }
-        return {
-            code: 200,
-            msg: "操作成功",
-            data: captcha[captchaType]
-        }
-    }
-}, {
-    url: '/mock/captcha/check',
+    response() {
+      switch (captchaType) {
+        case 'pick':
+          return success({
+            type: 'pick',
+            width: 350,
+            height: 200,
+            img: 'https://unpkg.com/@vbenjs/static-source@0.1.7/source/default-captcha-image.jpeg',
+            options: ['找', '比', '燕'],
+            code: JSON.stringify([
+              { x: 33, y: 44 },
+              { x: 78, y: 44 },
+              { x: 323, y: 75 },
+            ]),
+          })
+        case 'slide':
+          return success({
+            type: 'slide',
+            img: 'https://github.com/xingyuv/captcha-plus/blob/main/images/jigsaw/original/bg1.png',
+            width: 350,
+            height: 200,
+            block:
+              'https://github.com/xingyuv/captcha-plus/blob/main/images/jigsaw/slidingBlock/1.png',
+            blockWidth: 50,
+            blockHeight: 50,
+            y: 50,
+            code: JSON.stringify(120),
+          })
+        default:
+          return success({ type: '' })
+      }
+    },
+  },
+  {
+    url: '/mock/captcha/verify',
     method: 'post',
-    response(req) {
-        let str = atob(req.body.code)
-        let captchaType = str.replace('captcha:', '')
-        let successResult = {
-            code: 200,
-            msg: '操作成功',
+    response({ body }) {
+      switch (captchaType) {
+        case 'pick': {
+          let { points, code } = body
+          let standard = JSON.parse(code)
+          let tolerance = 20
+          let ok = standard.every((item, i) => {
+            return Math.hypot(item.x - points[i].x, item.y - points[i].y) < tolerance
+          })
+          return ok ? success() : error('验证失败')
         }
-        let failResult = {
-            code: 500,
-            msg: '验证失败'
+        case 'slide': {
+          let { x, timestamp, code } = body
+          let standard = JSON.parse(code)
+          let tolerance = 10
+          let ok = Math.abs(x - standard) < tolerance
+          let overTime = timestamp - standard > 7000
+          if (!ok) return error('验证失败')
+          if (overTime) return error('验证超时')
+          return success()
         }
-        if (str.includes('captcha')) {
-            let result = {
-                'pick': tap(() => {
-                    return successResult
-                }),
-                'slide': tap(() => {
-                    if (req.body.x > 222 && req.body.x < 233) {
-                        if (req.body.timestamp < 3000) {
-                            return successResult
-                        } else {
-                            return {
-                                code: 500,
-                                msg: '验证超时'
-                            }
-                        }
-                    } else {
-                        return failResult
-                    }
-                }),
-                'image': tap(() => {
-                    return req.body.code === 'uwv6' ?
-                        successResult : failResult
-                })
-            }
-            return result[captchaType]
-        } else {
-            return failResult
+        default: {
+          return success()
         }
-    }
-}]
+      }
+    },
+  },
+]

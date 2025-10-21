@@ -1,10 +1,36 @@
+<script name="MenuItem" setup>
+import { isExternal } from '@/utils/validate'
+import { useRouter } from 'vue-router'
+import MenuItem from './index.vue'
+
+const props = defineProps({
+  item: {
+    type: Object,
+    required: true,
+  },
+})
+
+const router = useRouter()
+
+function handleClick() {
+  if (isExternal(props.item.path)) {
+    window.open(props.item.path)
+  } else {
+    router.push({
+      path: props.item.path,
+      query: props.item.query,
+    })
+  }
+}
+</script>
+
 <template>
-  <el-sub-menu v-if="item.hasOwnProperty('children')" :index="item.path">
+  <el-sub-menu v-if="'children' in item" :index="item.path">
     <template #title>
       <slot :meta="item.meta" />
     </template>
     <template v-for="item in item.children" :key="item.path">
-      <MenuItem :item="item" v-if="item.meta && !item.meta.hidden">
+      <MenuItem v-if="item.meta && !item.meta.hidden" :item="item">
         <template #default="{ meta }">
           <slot :meta="meta" />
         </template>
@@ -15,31 +41,5 @@
     <slot :meta="item.meta" />
   </el-menu-item>
 </template>
-
-<script>
-import { isExternal } from '@/utils/validate'
-
-export default {
-  name: "MenuItem",
-  props: {
-    item: {
-      type: Object,
-      required: true,
-    }
-  },
-  methods: {
-    handleClick() {
-      if (isExternal(this.item.path)) {
-        window.open(this.item.path)
-      } else {
-        this.$router.push({
-          path: this.item.path,
-          query: this.item.query
-        })
-      }
-    }
-  }
-}
-</script>
 
 <style lang="scss" scoped></style>

@@ -1,54 +1,35 @@
-<template>
-  <div v-if="isExternal" style="externalIconStyle" :class="[className, 'svg-external-icon']" />
-  <svg v-else :class="className" aria-hidden="true">
-    <use :xlink:href="`#icon-${icon}`" />
-  </svg>
-</template>
-
-<script>
-import { isExternal } from '@/utils/validate'
-
-export default {
-  name: 'SvgIcon',
-  props: {
-    icon: {
-      type: String,
-      required: true,
-      default: ''
-    },
-    className: {
-      type: String,
-      default: 'svg-icon'
-    }
+<script name="SvgIcon" setup>
+import { Icon } from '@iconify/vue'
+const props = defineProps({
+  icon: {
+    type: [String, Object],
+    required: true,
   },
-  computed: {
-    isExternal() {
-      return isExternal(this.icon)
-    },
-    externalIconStyle() {
-      return {
-        'mask': `url(${this.icon}) no-repeat 50% 50%`,
-        '-webkit-mask': `url(${this.icon}) no-repeat 50% 50%`
-      }
+})
+
+const normalizedIcon = computed(() => {
+  if (typeof props.icon === 'string') {
+    let parts = props.icon.split(':')
+    if (parts.length === 1) {
+      return `icons:${props.icon}`
+    } else {
+      return props.icon
     }
+  } else {
+    return props.icon
   }
-}
+})
 </script>
+
+<template>
+  <Icon class="svg-icon" :icon="normalizedIcon" />
+</template>
 
 <style scoped>
 .svg-icon {
-  width: 1em;
-  height: 1em;
-  vertical-align: -0.15em;
-  fill: currentColor;
-  color: currentColor;
-  overflow: hidden;
-  outline: none;
-}
-
-.svg-external-icon {
-  background-color: currentColor;
-  mask-size: cover !important;
   display: inline-block;
+  overflow: hidden;
+  vertical-align: -0.15em;
+  outline: none;
 }
 </style>

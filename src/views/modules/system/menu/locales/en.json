@@ -1,1 +1,7 @@
-{}
+{
+  "rules": {
+    "title": "Title is required",
+    "path": "Path is required",
+    "component": "component is required"
+  }
+}

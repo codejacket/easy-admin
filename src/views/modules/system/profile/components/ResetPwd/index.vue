@@ -1,85 +1,115 @@
-<template>
-    <el-form class="reset-pwd-form" ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="旧密码" prop="oldPassword">
-            <el-input v-model="form.oldPassword" placeholder="请输入旧密码" type="password" show-password />
-        </el-form-item>
-        <el-form-item label="新密码" prop="newPassword">
-            <el-input v-model="form.newPassword" placeholder="请输入新密码" type="password" show-password/>
-        </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
-            <el-input v-model="form.confirmPassword" placeholder="请确认新密码" type="password" show-password/>
-        </el-form-item>
-        <el-form-item>
-            <easy-button type="primary" t="修改" @click="submitForm" />
-            <easy-button type="danger" t="忘记密码" />
-        </el-form-item>
-    </el-form>
-</template>
+<script name="ResetPwd" setup>
+import { updatePwd } from '@api/system/profile'
+import modal from '@plugins/modal'
+import { useI18n } from 'vue-i18n'
 
-<script>
-import { updatePwd } from "@api/system/profile"
+const { t } = useI18n()
 
-export default {
-    name: 'ResetPwd',
-    data() {
-        return {
-            form: {
-                oldPassword: '',
-                newPassword: '',
-                confirmPassword: ''
-            },
-            rules: {
-                oldPassword: [
-                    { required: true, message: "旧密码不能为空", trigger: "blur" }
-                ],
-                newPassword: [
-                    { required: true, message: "新密码不能为空", trigger: "blur" },
-                    { min: 6, max: 20, message: "密码长度在 6 到 20 个字符", trigger: "blur" }
-                ],
-                confirmPassword: [
-                    { required: true, message: "确认密码不能为空", trigger: "blur" },
-                    { 
-                        trigger: "blur",
-                        validator: (rule, value, callback) => {
-                            if (this.form.newPassword !== value) {
-                                callback(new Error("两次输入的密码不一致"))
-                            } else {
-                                callback()
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-    },
-    methods: {
-        reset() {
-            this.$refs['form']?.resetFields()
-            this.form = {
-                oldPassword: '',
-                newPassword: '',
-                confirmPassword: ''
-            }
+const formRef = useTemplateRef('formRef')
+
+const form = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
+
+const rules = computed(() => {
+  return {
+    oldPassword: [{ required: true, message: t('rules.oldPwdRequired'), trigger: 'blur' }],
+    newPassword: [
+      { required: true, message: t('rules.newPwdRequired'), trigger: 'blur' },
+      { min: 6, max: 20, message: t('rules.newPwdLength'), trigger: 'blur' },
+      {
+        trigger: 'blur',
+        validator: (rule, value, callback) => {
+          // 长度6 ~ 20, 必须包含: 数字、 字母, 且不能包含空格
+          const reg = /^(?=.*\d)(?=.*[a-zA-Z])(?!.*\s).+$/
+          if (reg.test(value)) {
+            callback()
+          } else {
+            callback(new Error(t('rules.newPwdFormat')))
+          }
         },
-        submitForm() {
-            this.$refs["form"]?.validate(async valid => {
-                if (valid) {
-                    await updatePwd(this.form)
-                    this.reset()
-                    this.$modal.message.success(this.$t('message.updateSuccess'))
-                }
-            })
-        }
+      },
+    ],
+    confirmPassword: [
+      { required: true, message: t('rules.confirmPwdRequired'), trigger: 'blur' },
+      {
+        trigger: 'blur',
+        validator: (rule, value, callback) => {
+          if (form.value.newPassword === value) {
+            callback()
+          } else {
+            callback(new Error(t('rules.confirmPwdMatch')))
+          }
+        },
+      },
+    ],
+  }
+})
+
+function reset() {
+  formRef.value?.resetFields()
+  form.value = {
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  }
+}
+
+function submitForm() {
+  formRef.value?.validate(async valid => {
+    if (valid) {
+      await updatePwd(form.value)
+      reset()
+      modal.message.success(t('successMsg'))
     }
+  })
 }
 </script>
 
+<template>
+  <el-form label-width="auto" :model="form" :rules="rules" ref="formRef">
+    <el-form-item :label="t('oldPassword')" prop="oldPassword">
+      <el-input
+        v-model="form.oldPassword"
+        :placeholder="t('placeholder.oldPassword')"
+        type="password"
+        show-password
+      />
+    </el-form-item>
+    <el-form-item :label="t('newPassword')" prop="newPassword">
+      <el-input
+        v-model="form.newPassword"
+        :placeholder="t('placeholder.newPassword')"
+        type="password"
+        show-password
+      />
+    </el-form-item>
+    <el-form-item :label="t('confirmPassword')" prop="confirmPassword">
+      <el-input
+        v-model="form.confirmPassword"
+        :placeholder="t('placeholder.confirmPassword')"
+        type="password"
+        show-password
+      />
+    </el-form-item>
+    <el-form-item label=" ">
+      <easy-button :t="t('update')" type="primary" @click="submitForm" />
+      <easy-button :t="t('reset')" type="danger" />
+    </el-form-item>
+  </el-form>
+</template>
+
+<i18n src="./locales/en.json" locale="en" />
+<i18n src="./locales/zh-CN.json" locale="zh-CN" />
+
 <style lang="scss" scoped>
-.reset-pwd-form {
-    .el-form-item {
-        .el-input {
-            width: 240px;
-        }
+.el-form {
+  .el-form-item {
+    .el-input {
+      width: 240px;
     }
+  }
 }
 </style>

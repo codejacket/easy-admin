@@ -1,30 +1,15 @@
-<template>
-    <span class="copyright">
-        {{ $t('system.copyright', { date: copyright.date, company: copyright.company }) }}
-        <el-divider direction="vertical" />
-        {{ $t('system.icp', { icp: copyright.icp })  }}
-    </span>
-</template>
+<script name="Copyright" setup></script>
 
-<script>
-import { useSettingsStore } from '@store/settings'
-import { mapState } from 'pinia'
-export default {
-    name: 'Copyright',
-    computed: {
-        ...mapState(useSettingsStore, ['copyright'])
-    }
-}
-</script>
+<template>
+  <el-space spacer="|">
+    <span>{{ $t('system.copyright') }}</span>
+    <span>{{ $t('system.icp') }}</span>
+  </el-space>
+</template>
 
 <style scoped>
 .copyright {
-    color: var(--el-text-color-secondary);
-    font-size: 12px;
-
-    .el-divider {
-        margin: 0 5px;
-        border-color: currentColor;
-    }
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 </style>

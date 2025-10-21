@@ -1,13 +1,10 @@
-import clipboard from './modules/clipboard'
-import auth from './modules/auth'
-import preventReclick from './modules/preventReclick'
-import onClickRotate from './modules/onClickRotate'
+const modules = import.meta.glob('./modules/*.js', { eager: true })
 
 export default {
-    install(app) {
-        app.directive('clipboard', clipboard)
-        app.directive('auth', auth)
-        app.directive('preventReclick', preventReclick)
-        app.directive('onClickRotate', onClickRotate)
-    }
+  install(app) {
+    Object.entries(modules).forEach(([path, module]) => {
+      let name = path.match(/\.\/modules\/(.*)\.js$/)[1]
+      app.directive(name, module.default ?? module)
+    })
+  },
 }

@@ -1,17 +1,16 @@
-import request from '@/utils/request'
+import request from '@/api'
 import { crud } from '@/utils/crud'
 
-export const { list, get, add, update, del } = crud('/system/dict')
+export const { listDict, getDict, addDict, updateDict, delDict } = crud('/system/dict', 'dict')
+export const { listDictData, getDictData, addDictData, updateDictData, delDictData } = crud(
+  '/system/dictData',
+  'dictData',
+)
 
-export const { listDictData, getDictData, addDictData, updateDictData, delDictData } = crud('/system/dictData', 'dictData')
-
-export function getDict(keys, locales) {
-    return request({
-        url: '/system/dict/getDict',
-        method: 'get',
-        params: { keys, locales },
-        headers: {
-            repeatSubmit: false
-        }
-    })
+export function getDicts(params) {
+  return request({
+    url: '/system/dicts',
+    method: 'get',
+    params,
+  })
 }

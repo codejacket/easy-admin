@@ -1,1 +1,15 @@
-{}
+{
+  "projectIntro": "Project Introduction",
+  "projectInfo": "Project Information",
+  "version": "Version",
+  "buildTime": "Last Build Time",
+  "license": "License",
+  "author": "Author",
+  "github": "Github",
+  "preview": "Preview",
+  "dependencies": "Dependencies",
+  "devDependencies": "Dev Dependencies",
+  "info": {
+    "introduction": "is an open-source backend management system framework developed based on Vue3, using mainstream technology stacks such as Vue Vite, Vue Router, Vue I18n, Element Plus, Pinia, and Axios. It has rich basic function modules, supports multi-language switching and flexible auth management, with clear code structure and strong scalability. Whether it is for quickly building projects or as a practical example for learning Vue3 development, Easy-Admin can provide efficient and convenient solutions to help developers easily meet various backend management needs."
+  }
+}

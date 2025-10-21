@@ -1,30 +1,28 @@
-<template>
-    <component ref="captcha-ref" :is="component" v-bind="$attrs" />
-</template>
+<script name="Captcha" setup>
+import { createRefProxy } from '@/utils/vue'
+import { kebabCase } from 'lodash-es'
 
-<script>
-export default {
-    name: 'Captcha',
-    expose: ['open', 'refresh'],
-    props: {
-        type: {
-            type: String,
-            default: 'pick'
-        },
-    },
-    computed: {
-        component() {
-            let type = this.type.charAt(0).toUpperCase() + this.type.slice(1)
-            return require(`./components/${type}`).default
-        }
-    },
-    methods: {
-        open() {
-            this.$refs['captcha-ref'].open()
-        },
-        refresh() {
-            this.$refs['captcha-ref'].refresh()
-        }
+const props = defineProps({
+  type: {
+    type: String,
+    default: 'pick',
+  },
+})
+
+const captchaRef = useTemplateRef('captchaRef')
+const components = import.meta.glob('./components/*/index.vue')
+const component = computed(() => {
+  for (const path in components) {
+    const c = path.split('/').at(-2)
+    if (kebabCase(c) === kebabCase(props.type)) {
+      return defineAsyncComponent(components[path])
     }
-}
+  }
+})
+
+defineExpose(createRefProxy(captchaRef))
 </script>
+
+<template>
+  <component :is="component" ref="captchaRef" />
+</template>

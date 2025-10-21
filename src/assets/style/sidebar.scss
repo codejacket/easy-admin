@@ -1,0 +1,35 @@
+.light .sidebar-container.dark-sidebar {
+  --sidebar-text-color: hsl(0deg 0% 85%);
+  --sidebar-menu-bg: hsl(0deg 0% 14%);
+  --sidebar-menu-bg-hover: hsl(0deg 0% 12%);
+  --sidebar-sub-menu-bg: hsl(0deg 0% 10%);
+  --sidebar-sub-menu-bg-hover: hsl(0deg 0% 8%);
+}
+
+.sidebar-container.card .el-menu {
+  --el-menu-hover-bg-color: var(--sidebar-menu-bg-hover);
+  --el-menu-text-color: var(--sidebar-text-color);
+  --el-menu-active-color: var(--el-color-primary);
+
+  .el-menu {
+    --el-menu-bg-color: var(--sidebar-sub-menu-bg);
+    --el-menu-hover-bg-color: var(--sidebar-sub-menu-bg-hover);
+  }
+
+  .is-active {
+    &.el-sub-menu > .el-sub-menu__title {
+      color: var(--el-color-primary);
+    }
+
+    &.el-menu-item {
+      background: hsl(
+        var(--el-color-primary-h) calc(var(--el-color-primary-s) * 1%)
+          calc(var(--el-color-primary-l) * 1%) / 8%
+      );
+
+      svg {
+        color: var(--el-color-primary);
+      }
+    }
+  }
+}

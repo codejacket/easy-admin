@@ -1,79 +1,81 @@
 {
   "name": "easy-admin",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "Easy-Admin",
+  "type": "module",
+  "description": "一款基于 Vue3 开发的开源后台管理系统框架。",
   "license": "MIT",
-  "author": "gg3081779049@qq.com",
+  "author": {
+    "name": "easy-admin",
+    "email": "gg3081779049@qq.com",
+    "url": "https://github.com/codejacket"
+  },
+  "repository": {
+    "url": "https://github.com/codejacket/easy-admin.git"
+  },
   "scripts": {
-    "dev": "vue-cli-service serve",
-    "dev_mock": "vue-cli-service serve --mode mock",
-    "build": "vue-cli-service build",
-    "preview": "node build/index.js --preview",
-    "lint": "vue-cli-service lint"
+    "dev": "vite",
+    "mock": "vite --mode mock",
+    "build": "vite build",
+    "preview": "vite preview",
+    "format": "prettier --write src/",
+    "lint:style": "stylelint \"src/**/*.{css,scss,vue}\" --fix --no-cache"
   },
   "dependencies": {
-    "@form-create/designer": "^3.2.11",
-    "@form-create/element-ui": "^3.2.20",
-    "axios": "^1.6.8",
-    "colord": "2.9.3",
-    "core-js": "^3.8.3",
+    "@iconify/tools": "^4.1.2",
+    "@intlify/unplugin-vue-i18n": "^11.0.1",
+    "@unhead/vue": "^1.0.0",
+    "@vueuse/core": "^13.9.0",
+    "axios": "^1.10.0",
+    "boxen": "^8.0.1",
+    "colord": "^2.9.3",
+    "cropperjs": "^1.6.2",
     "disable-devtool": "^0.3.8",
-    "element-plus": "^2.10.0",
+    "element-plus": "^2.11.0",
     "file-saver": "^2.0.5",
-    "fuse.js": "7.0.0",
+    "fuse.js": "^7.1.0",
     "highlight.js": "^11.11.1",
     "js-cookie": "^3.0.5",
     "jsencrypt": "^3.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "lodash-es": "^4.17.21",
     "mockjs": "^1.1.0",
-    "multer": "^1.4.5-lts.1",
     "nprogress": "^0.2.0",
-    "pinia": "^2.1.7",
-    "pinia-plugin-persistedstate": "^4.1.3",
-    "raw-loader": "^4.0.2",
-    "screenfull": "5.0.2",
-    "vue": "^3.2.13",
-    "vue-cropper": "^1.1.4",
-    "vue-draggable-plus": "^0.4.1",
-    "vue-i18n": "^10.0.0-beta.1",
-    "vue-json-viewer": "^3.0.4",
-    "vue-meta": "^3.0.0-alpha.8",
-    "vue-router": "^4.3.2",
-    "webpack-inject-plugin": "^1.5.5"
+    "picocolors": "^1.1.1",
+    "pinia": "^3.0.0",
+    "pinia-plugin-persistedstate": "^4.3.0",
+    "prettier-plugin-organize-attributes": "^1.0.0",
+    "prettier-plugin-organize-imports": "^4.1.0",
+    "qs": "^6.14.0",
+    "sass": "^1.89.2",
+    "screenfull": "^6.0.2",
+    "stylelint": "^16.21.0",
+    "stylelint-config-recess-order": "^7.1.0",
+    "stylelint-config-standard-scss": "^15.0.1",
+    "stylelint-config-standard-vue": "^1.0.0",
+    "unocss": "^66.2.3",
+    "vite-plugin-env-parse": "^1.0.15",
+    "vite-plugin-inspect": "^11.2.0",
+    "vite-plugin-mock": "^2.8.0",
+    "vue": "^3.5.13",
+    "vue-draggable-plus": "^0.6.0",
+    "vue-element-plus-x": "^1.3.0",
+    "vue-hooks-plus": "^2.4.0",
+    "vue-i18n": "^11.1.6",
+    "vue-router": "^4.5.1",
+    "vue3-count-to": "^1.1.2",
+    "vue3-json-viewer": "^2.4.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.16",
-    "@babel/eslint-parser": "^7.12.16",
-    "@intlify/vue-i18n-loader": "^5.0.0",
-    "@types/highlight.js": "^10.1.0",
-    "@vue/cli-plugin-babel": "~5.0.0",
-    "@vue/cli-plugin-eslint": "~5.0.0",
-    "@vue/cli-service": "~5.0.0",
-    "compression-webpack-plugin": "^11.1.0",
-    "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^8.0.3",
-    "sass": "1.32.13",
-    "sass-loader": "10.1.1",
-    "svg-sprite-loader": "^6.0.11"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
-    },
-    "extends": [
-      "plugin:vue/vue3-essential",
-      "eslint:recommended"
-    ],
-    "parserOptions": {
-      "parser": "@babel/eslint-parser"
-    },
-    "rules": {}
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead",
-    "not ie 11"
-  ]
+    "@iconify/utils": "^2.3.0",
+    "@iconify/vue": "^5.0.0",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "@vitejs/plugin-vue-jsx": "^4.1.2",
+    "install": "^0.13.0",
+    "npm": "^11.4.2",
+    "prettier": "3.5.3",
+    "unplugin-auto-import": "^19.3.0",
+    "vite": "^6.2.4",
+    "vite-plugin-vue-devtools": "^7.7.7"
+  }
 }

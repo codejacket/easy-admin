@@ -1,24 +1,32 @@
-import i18n from '@/locales'
-import { $tm } from '@/locales'
-import { getDict } from '@api/system/dict'
-import { isEmpty } from 'lodash'
+import i18n, { $tm } from '@/locales'
+import { getDicts } from '@api/system/dict'
+import { isEmpty } from 'lodash-es'
 
 const { availableLocales, mergeLocaleMessage } = i18n.global
 
-export default function(...keys) {
-    let nokeys = keys.filter(key => isEmpty($tm(`dict.${key}`)))
-    if (nokeys.length) {
-        getDict?.(nokeys, availableLocales)?.then(({ data }) => {
-            let locales = Object.keys(data).filter(locale => availableLocales.includes(locale))
-            locales.forEach(locale => {
-                mergeLocaleMessage(locale, {
-                    dict: data[locale]
-                })
-            })
-        })
+export default {
+  get(type) {
+    return this.all([type]).value?.[type]
+  },
+  all(types) {
+    let missing = types.filter(type => isEmpty($tm(`dict.${type}`)))
+    if (missing.length) {
+      getDicts({
+        types: missing,
+        locales: availableLocales,
+      }).then(({ data }) => {
+        for (const [locale, dicts] of Object.entries(data)) {
+          if (availableLocales.includes(locale)) {
+            mergeLocaleMessage(locale, { dict: dicts })
+          }
+        }
+      })
     }
-    return keys.reduce((acc, key) => {
-        acc[key] = $tm(`dict.${key}`)
+    return computed(() => {
+      return types.reduce((acc, type) => {
+        acc[type] = $tm(`dict.${type}`)
         return acc
-    }, {})
+      }, {})
+    })
+  },
 }
